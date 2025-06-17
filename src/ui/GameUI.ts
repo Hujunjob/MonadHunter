@@ -1,0 +1,55 @@
+import Phaser from 'phaser';
+
+interface GameStats {
+  level: number;
+  experience: number;
+  experienceToNext: number;
+  health: number;
+  maxHealth: number;
+}
+
+export class GameUI {
+  private scene: Phaser.Scene;
+  private healthText!: Phaser.GameObjects.Text;
+  private levelText!: Phaser.GameObjects.Text;
+  private expBar!: Phaser.GameObjects.Graphics;
+  private expBarBg!: Phaser.GameObjects.Graphics;
+
+  constructor(scene: Phaser.Scene, stats: GameStats) {
+    this.scene = scene;
+    this.createUI(stats);
+  }
+
+  private createUI(stats: GameStats) {
+    // Health text
+    this.healthText = this.scene.add.text(10, 10, `Health: ${stats.health}/${stats.maxHealth}`, {
+      fontSize: '20px',
+      color: '#ff0000'
+    });
+
+    // Level text
+    this.levelText = this.scene.add.text(10, 40, `Level: ${stats.level}`, {
+      fontSize: '20px',
+      color: '#00ff00'
+    });
+
+    // Experience bar background
+    this.expBarBg = this.scene.add.graphics();
+    this.expBarBg.fillStyle(0x333333);
+    this.expBarBg.fillRect(10, 70, 200, 20);
+
+    // Experience bar
+    this.expBar = this.scene.add.graphics();
+  }
+
+  update(stats: GameStats) {
+    this.healthText.setText(`Health: ${stats.health}/${stats.maxHealth}`);
+    this.levelText.setText(`Level: ${stats.level}`);
+
+    // Update experience bar
+    this.expBar.clear();
+    this.expBar.fillStyle(0x00ff00);
+    const expWidth = (stats.experience / stats.experienceToNext) * 200;
+    this.expBar.fillRect(10, 70, expWidth, 20);
+  }
+}

@@ -1,0 +1,20 @@
+.App {
+  text-align: center;
+  padding: 20px;
+}
+
+.App h1 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.App p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+#game-container {
+  display: inline-block;
+  border: 2px solid #333;
+  border-radius: 8px;
+}
