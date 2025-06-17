@@ -20,7 +20,8 @@ export class GameScene extends Phaser.Scene {
     health: 100,
     maxHealth: 100,
     killCount: 0,
-    gameTime: 0
+    gameTime: 0,
+    playerSpeed: 200
   };
   private gameStartTime!: number;
 
@@ -47,11 +48,23 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    // Reset game stats
+    this.gameStats = {
+      level: 1,
+      experience: 0,
+      experienceToNext: 100,
+      health: 100,
+      maxHealth: 100,
+      killCount: 0,
+      gameTime: 0,
+      playerSpeed: 200
+    };
+    
     // Record game start time
     this.gameStartTime = this.time.now;
     
     // Create player
-    this.player = new Player(this, 400, 300);
+    this.player = new Player(this, 400, 300, this.gameStats.playerSpeed);
     
     // Create groups
     this.enemies = this.physics.add.group({
@@ -193,13 +206,26 @@ export class GameScene extends Phaser.Scene {
     this.gameStats.experienceToNext = Math.floor(this.gameStats.experienceToNext * 1.2);
     this.gameStats.maxHealth += 20;
     this.gameStats.health = this.gameStats.maxHealth;
+    this.gameStats.playerSpeed += 25; // Increase speed by 25 each level
+    
+    // Update player speed
+    this.player.setSpeed(this.gameStats.playerSpeed);
   }
 
   private gameOver() {
-    this.scene.pause();
+    // Stop enemy spawning and physics updates instead of pausing the whole scene
+    this.physics.pause();
+    
+    // Add game over text
     this.add.text(400, 300, 'GAME OVER', {
       fontSize: '64px',
       color: '#ffffff'
+    }).setOrigin(0.5);
+    
+    // Add restart instruction
+    this.add.text(400, 370, 'Click Restart to play again', {
+      fontSize: '24px',
+      color: '#cccccc'
     }).setOrigin(0.5);
   }
 }

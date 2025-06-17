@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  private speed = 200;
+  private speed: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number = 200) {
     super(scene, x, y, 'player');
+    
+    this.speed = speed;
     
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -26,5 +28,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     } else if (cursors.down.isDown) {
       this.setVelocityY(this.speed);
     }
+  }
+
+  setSpeed(newSpeed: number) {
+    this.speed = newSpeed;
   }
 }
