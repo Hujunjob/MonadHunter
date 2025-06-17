@@ -13,8 +13,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.player = player;
     
     // Scale stats based on level
-    this.speed = (80 + (level - 1) * 15) * 3; // Base 240, +45 per level (3x faster)
-    this.maxHealth = 50 + (level - 1) * 20; // Base 50, +20 per level
+    this.speed = (80 + (level - 1) * 12) * 2; // Base 240, +45 per level (3x faster)
+    this.maxHealth = 50 + (level - 1) * 15; // Base 50, +20 per level
     this.health = this.maxHealth;
     
     scene.add.existing(this);

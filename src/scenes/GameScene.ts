@@ -122,7 +122,7 @@ export class GameScene extends Phaser.Scene {
     
     // Start enemy spawning with dynamic rate
     this.time.addEvent({
-      delay: 500,
+      delay: 800,
       callback: this.spawnEnemy,
       callbackScope: this,
       loop: true
@@ -312,6 +312,15 @@ export class GameScene extends Phaser.Scene {
     this.gameStats.level++;
     this.gameStats.experience = 0;
     this.gameStats.experienceToNext = Math.floor(this.gameStats.experienceToNext * 1.2);
+    
+    // 升级时自动提升血量上限和回复血量
+    const healthIncrease = 20;
+    this.player.updateStats({ 
+      maxHealth: this.player.stats.maxHealth + healthIncrease 
+    });
+    this.player.heal(healthIncrease); // 升级时恢复新增的血量
+    this.gameStats.maxHealth = this.player.stats.maxHealth;
+    this.gameStats.health = this.player.stats.health;
     
     // Pause game and show upgrade options
     this.isUpgradeModalOpen = true;
