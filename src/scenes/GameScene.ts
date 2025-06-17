@@ -3,6 +3,9 @@ import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { Bullet } from '../entities/Bullet';
 import { GameUI } from '../ui/GameUI';
+import { MultiSynqManager } from '../sync/MultiSynqManager';
+import { GameView } from '../sync/GameView';
+import type { GameState } from '../sync/GameModel';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -12,6 +15,11 @@ export class GameScene extends Phaser.Scene {
   private gameUI!: GameUI;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private enterKey!: Phaser.Input.Keyboard.Key;
+  
+  // MultiSynq integration
+  private multiSynqManager!: MultiSynqManager;
+  private gameView!: GameView;
+  private isMultiSynqEnabled = false;
   
   private gameStats = {
     level: 1,
@@ -48,6 +56,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    // Initialize MultiSynq asynchronously
+    this.initializeMultiSynq().then(() => {
+      this.finishCreate();
+    });
+  }
+
+  private async finishCreate() {
     // Reset game stats
     this.gameStats = {
       level: 1,
@@ -85,20 +100,36 @@ export class GameScene extends Phaser.Scene {
     // Create UI
     this.gameUI = new GameUI(this, this.gameStats);
     
-    // Set up collisions
-    this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
-    this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
+    // Set initial anti-cheat status
+    this.gameUI.setAntiCheatStatus(this.isMultiSynqEnabled);
     
-    // Start spawning enemies
-    this.time.addEvent({
-      delay: 667,
-      callback: this.spawnEnemy,
-      callbackScope: this,
-      loop: true
-    });
+    if (!this.isMultiSynqEnabled) {
+      // Only set up local collisions if MultiSynq is not enabled
+      this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
+      this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
+      
+      // Start local enemy spawning
+      this.time.addEvent({
+        delay: 667,
+        callback: this.spawnEnemy,
+        callbackScope: this,
+        loop: true
+      });
+    } else {
+      // Start synchronized game
+      this.gameView.startGame();
+    }
   }
 
   update() {
+    if (this.isMultiSynqEnabled) {
+      this.updateMultiSynq();
+    } else {
+      this.updateLocal();
+    }
+  }
+
+  private updateLocal() {
     this.player.update(this.cursors);
     
     // Update game time
@@ -111,6 +142,26 @@ export class GameScene extends Phaser.Scene {
     
     // Update UI
     this.gameUI.update(this.gameStats);
+  }
+
+  private updateMultiSynq() {
+    // Send player input to MultiSynq model
+    const direction = { x: 0, y: 0 };
+    
+    if (this.cursors.left.isDown) direction.x -= 1;
+    if (this.cursors.right.isDown) direction.x += 1;
+    if (this.cursors.up.isDown) direction.y -= 1;
+    if (this.cursors.down.isDown) direction.y += 1;
+    
+    // Send movement input
+    if (direction.x !== 0 || direction.y !== 0) {
+      this.gameView.sendMoveInput(direction);
+    }
+    
+    // Handle shooting input
+    if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      this.gameView.sendShootInput();
+    }
   }
 
   private spawnEnemy() {
@@ -227,5 +278,101 @@ export class GameScene extends Phaser.Scene {
       fontSize: '24px',
       color: '#cccccc'
     }).setOrigin(0.5);
+  }
+
+  // MultiSynq initialization
+  private async initializeMultiSynq() {
+    try {
+      // Ask user if they want to enable anti-cheat
+      const enableAntiCheat = confirm(
+        'Enable MultiSynq Anti-Cheat Protection?\n\n' +
+        'This will prevent cheating by validating all game actions on the server.\n' +
+        'Click OK to enable, or Cancel to play in local mode.'
+      );
+
+      if (!enableAntiCheat) {
+        console.log('Playing in local mode');
+        return;
+      }
+
+      const apiKey = await MultiSynqManager.getApiKey();
+      this.multiSynqManager = new MultiSynqManager();
+      
+      const { view } = await this.multiSynqManager.initialize(apiKey);
+      this.gameView = view;
+      this.isMultiSynqEnabled = true;
+
+      // Set up state update callback
+      this.gameView.onStateChange((state: GameState) => {
+        this.syncGameState(state);
+      });
+
+      // Set up game over callback
+      this.gameView.onGameEnd((stats: any) => {
+        console.log('Game ended with stats:', stats);
+        this.gameOver();
+      });
+
+      console.log('MultiSynq anti-cheat enabled');
+    } catch (error) {
+      console.error('Failed to initialize MultiSynq, falling back to local mode:', error);
+      this.isMultiSynqEnabled = false;
+    }
+  }
+
+  // Sync game state from server
+  private syncGameState(state: GameState) {
+    // Update local game stats
+    this.gameStats = {
+      level: state.level,
+      experience: state.experience,
+      experienceToNext: state.experienceToNext,
+      health: state.health,
+      maxHealth: state.maxHealth,
+      killCount: state.killCount,
+      gameTime: state.gameTime,
+      playerSpeed: state.playerSpeed
+    };
+
+    // Update player position
+    this.player.setPosition(state.playerPosition.x, state.playerPosition.y);
+
+    // Sync enemies
+    this.syncEnemies(state.enemies);
+    
+    // Sync bullets
+    this.syncBullets(state.bullets);
+
+    // Update UI
+    this.gameUI.update(this.gameStats);
+  }
+
+  private syncEnemies(serverEnemies: any[]) {
+    // Clear existing enemies
+    this.enemies.clear(true, true);
+
+    // Create enemies from server state
+    serverEnemies.forEach(enemyData => {
+      const enemy = new Enemy(this, enemyData.x, enemyData.y, this.player, this.gameStats.level);
+      enemy.setData('serverId', enemyData.id);
+      enemy.setData('health', enemyData.health);
+      this.enemies.add(enemy);
+    });
+  }
+
+  private syncBullets(serverBullets: any[]) {
+    // Clear existing bullets
+    this.bullets.clear(true, true);
+
+    // Create bullets from server state
+    serverBullets.forEach(bulletData => {
+      const bullet = new Bullet(this, bulletData.x, bulletData.y, { x: bulletData.targetX, y: bulletData.targetY } as any);
+      bullet.setData('serverId', bulletData.id);
+      bullet.setVelocity(
+        (bulletData.targetX - bulletData.x) / Math.sqrt(Math.pow(bulletData.targetX - bulletData.x, 2) + Math.pow(bulletData.targetY - bulletData.y, 2)) * bulletData.speed,
+        (bulletData.targetY - bulletData.y) / Math.sqrt(Math.pow(bulletData.targetX - bulletData.x, 2) + Math.pow(bulletData.targetY - bulletData.y, 2)) * bulletData.speed
+      );
+      this.bullets.add(bullet);
+    });
   }
 }

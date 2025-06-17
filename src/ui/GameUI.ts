@@ -19,6 +19,7 @@ export class GameUI {
   private restartButton!: Phaser.GameObjects.Text;
   private killCountText!: Phaser.GameObjects.Text;
   private gameTimeText!: Phaser.GameObjects.Text;
+  private antiCheatStatus!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
     this.scene = scene;
@@ -69,6 +70,22 @@ export class GameUI {
     this.restartButton.on('pointerdown', () => {
       this.scene.scene.restart();
     });
+
+    // Anti-cheat status indicator
+    this.antiCheatStatus = this.scene.add.text(700, 50, '', {
+      fontSize: '16px',
+      color: '#00ff00'
+    });
+  }
+
+  setAntiCheatStatus(enabled: boolean) {
+    if (enabled) {
+      this.antiCheatStatus.setText('🛡️ Anti-Cheat: ON');
+      this.antiCheatStatus.setColor('#00ff00');
+    } else {
+      this.antiCheatStatus.setText('⚠️ Anti-Cheat: OFF');
+      this.antiCheatStatus.setColor('#ffaa00');
+    }
   }
 
   update(stats: GameStats) {
