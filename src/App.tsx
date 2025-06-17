@@ -27,6 +27,16 @@ function App() {
       gameRef.current.destroy(true);
       gameRef.current = null;
     }
+    
+    // Clear any global game state
+    delete (window as any).__OBSERVER_MODE__;
+    
+    // Clean up any remaining canvas elements
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+      gameContainer.innerHTML = '';
+    }
+    
     setAppState('mode-selection');
     setObservingAddress(null);
   };
@@ -73,6 +83,14 @@ function App() {
       address: address
     };
   }, [isConnected, address]);
+
+  // Provide global reset callback for game UI
+  React.useEffect(() => {
+    (window as any).__GAME_RESET_CALLBACK__ = resetGame;
+    return () => {
+      delete (window as any).__GAME_RESET_CALLBACK__;
+    };
+  }, []);
 
   return (
     <div className="App">

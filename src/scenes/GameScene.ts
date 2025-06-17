@@ -186,12 +186,14 @@ export class GameScene extends Phaser.Scene {
     // In observer mode, we only update the display based on observed data
     // No input processing, just visual updates
     
-    // Update game time display
-    this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
-    
-    // Simulate observing another player's game
-    // In a real implementation, this would fetch data from MultiSynq for the specific player
-    this.simulateObservedGameplay();
+    if (this.isMultiSynqEnabled && this.observingAddress) {
+      // Real observer mode: get state from MultiSynq for the target player
+      this.observePlayerGameState();
+    } else {
+      // Fallback: simulate gameplay if MultiSynq is not available
+      this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
+      this.simulateObservedGameplay();
+    }
     
     // Update UI
     this.gameUI.update(this.gameStats);
@@ -432,6 +434,35 @@ export class GameScene extends Phaser.Scene {
       );
       this.bullets.add(bullet);
     });
+  }
+
+  private observePlayerGameState() {
+    try {
+      // In a real implementation with MultiSynq, you would:
+      // 1. Subscribe to the target player's game state updates
+      // 2. Get their current game state from MultiSynq servers
+      // 3. Update local display to match their game
+      
+      if (this.multiSynqManager && this.observingAddress) {
+        // TODO: Implement MultiSynq observer functionality
+        // For now, we'll show a placeholder message and fall back to simulation
+        console.log(`Attempting to observe player: ${this.observingAddress}`);
+        
+        // This is where you would call MultiSynq's API to get another player's state
+        // Example (pseudo-code):
+        // const playerState = await this.multiSynqManager.getPlayerState(this.observingAddress);
+        // this.syncGameState(playerState);
+        
+        // Fallback to simulation for now
+        this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
+        this.simulateObservedGameplay();
+      }
+    } catch (error) {
+      console.error('Error observing player game state:', error);
+      // Fallback to simulation
+      this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
+      this.simulateObservedGameplay();
+    }
   }
 
   private updateWalletStatus() {

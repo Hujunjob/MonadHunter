@@ -75,7 +75,11 @@ export class GameUI {
     });
     this.restartButton.setInteractive();
     this.restartButton.on('pointerdown', () => {
-      this.scene.scene.restart();
+      // Trigger the App's resetGame function via global callback
+      const globalResetCallback = (window as any).__GAME_RESET_CALLBACK__;
+      if (globalResetCallback) {
+        globalResetCallback();
+      }
     });
 
     // Anti-cheat status indicator

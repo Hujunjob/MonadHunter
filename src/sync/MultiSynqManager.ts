@@ -72,6 +72,30 @@ export class MultiSynqManager {
     return import.meta.env.VITE_MULTISYNQ_API_KEY || null;
   }
 
+  // Observer mode functionality
+  async observePlayer(playerAddress: string) {
+    try {
+      if (!this.isInitialized || !this.session) {
+        throw new Error('MultiSynq not initialized');
+      }
+      
+      // TODO: Implement actual player observation
+      // This would involve subscribing to another session/player's game state
+      console.log(`Setting up observer mode for player: ${playerAddress}`);
+      
+      // In a real implementation, you would:
+      // 1. Connect to the target player's session
+      // 2. Subscribe to their game state updates
+      // 3. Return a stream of their game state
+      
+      // For now, return a placeholder
+      return null;
+    } catch (error) {
+      console.error('Failed to observe player:', error);
+      throw error;
+    }
+  }
+
   // Check if MultiSynq is available (has API key)
   static isAvailable(): boolean {
     return !!(import.meta.env.VITE_MULTISYNQ_API_KEY);
