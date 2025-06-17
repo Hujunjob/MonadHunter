@@ -45,7 +45,7 @@ function App() {
     const appElement = document.querySelector('.App') as HTMLElement;
     if (appElement) {
       if (appState === "playing") {
-        appElement.style.width = "22vw";
+        appElement.style.width = "25vw";
       } else {
         appElement.style.width = "100vw";
       }

@@ -1,9 +1,11 @@
 .App {
   text-align: center;
   padding: 20px;
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
   color: white;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .app-header {
