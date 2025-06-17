@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import type { PlayerStats } from '../entities/Player';
 
 interface GameStats {
   level: number;
@@ -8,6 +9,7 @@ interface GameStats {
   maxHealth: number;
   killCount: number;
   gameTime: number;
+  playerStats: PlayerStats;
 }
 
 interface WalletInfo {
@@ -25,6 +27,7 @@ export class GameUI {
   private killCountText!: Phaser.GameObjects.Text;
   private gameTimeText!: Phaser.GameObjects.Text;
   private walletStatus!: Phaser.GameObjects.Text;
+  private playerStatsText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
     this.scene = scene;
@@ -85,6 +88,14 @@ export class GameUI {
       fontSize: '14px',
       color: '#676FFF'
     });
+
+    // Player stats display
+    this.playerStatsText = this.scene.add.text(10, 150, '', {
+      fontSize: '16px',
+      color: '#ffffff',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      padding: { x: 10, y: 8 }
+    });
   }
 
   setWalletStatus(walletInfo: WalletInfo) {
@@ -109,6 +120,14 @@ export class GameUI {
     this.expBar.fillStyle(0x00ff00);
     const expWidth = (stats.experience / stats.experienceToNext) * 200;
     this.expBar.fillRect(10, 70, expWidth, 20);
+
+    // Update player stats display
+    const statsText = [
+      `🔫 子弹数量: ${stats.playerStats.bulletCount}`,
+      `⚡ 移动速度: ${stats.playerStats.speed}`,
+      `🛡️ 防御力: ${stats.playerStats.defense}`
+    ].join('\n');
+    this.playerStatsText.setText(statsText);
   }
 
   private formatTime(seconds: number): string {

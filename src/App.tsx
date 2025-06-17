@@ -3,6 +3,8 @@ import { useAccount } from 'wagmi';
 import { Game } from './Game';
 import { WalletConnect } from './components/WalletConnect';
 import { GameModeSelection } from './components/GameModeSelection';
+import { UpgradeModal } from './components/UpgradeModal';
+import type { UpgradeOption } from './components/UpgradeModal';
 import './App.css';
 
 type AppState = 'wallet' | 'mode-selection' | 'playing';
@@ -11,6 +13,9 @@ function App() {
   const { isConnected, address } = useAccount();
   const gameRef = useRef<Game | null>(null);
   const [appState, setAppState] = useState<AppState>('wallet');
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeOptions, setUpgradeOptions] = useState<UpgradeOption[]>([]);
+  const [playerLevel, setPlayerLevel] = useState(1);
 
   const startGame = () => {
     if (!gameRef.current) {
@@ -32,6 +37,23 @@ function App() {
     }
     
     setAppState('mode-selection');
+  };
+
+  const showUpgradeModal = (options: UpgradeOption[], level: number) => {
+    setUpgradeOptions(options);
+    setPlayerLevel(level);
+    setIsUpgradeModalOpen(true);
+  };
+
+  const selectUpgrade = (option: UpgradeOption) => {
+    // Call the game scene's selectUpgrade method
+    if (gameRef.current && gameRef.current.scene.isActive('GameScene')) {
+      const gameScene = gameRef.current.scene.getScene('GameScene') as any;
+      if (gameScene && gameScene.selectUpgrade) {
+        gameScene.selectUpgrade(option.id);
+      }
+    }
+    setIsUpgradeModalOpen(false);
   };
 
   // Update app state based on wallet connection
@@ -63,8 +85,10 @@ function App() {
   // Provide global reset callback for game UI
   React.useEffect(() => {
     (window as any).__GAME_RESET_CALLBACK__ = resetGame;
+    (window as any).__SHOW_UPGRADE_CALLBACK__ = showUpgradeModal;
     return () => {
       delete (window as any).__GAME_RESET_CALLBACK__;
+      delete (window as any).__SHOW_UPGRADE_CALLBACK__;
     };
   }, []);
 
@@ -101,6 +125,14 @@ function App() {
           <div id="game-container"></div>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={isUpgradeModalOpen}
+        options={upgradeOptions}
+        onSelectUpgrade={selectUpgrade}
+        playerLevel={playerLevel}
+      />
     </div>
   );
 }

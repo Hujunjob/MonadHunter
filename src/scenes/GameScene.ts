@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
+import type { PlayerStats } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { Bullet } from '../entities/Bullet';
 import { GameUI } from '../ui/GameUI';
@@ -21,12 +22,20 @@ export class GameScene extends Phaser.Scene {
     maxHealth: 100,
     killCount: 0,
     gameTime: 0,
-    playerSpeed: 200
+    playerStats: {
+      speed: 200,
+      bulletCount: 1,
+      defense: 0,
+      maxHealth: 100,
+      health: 100
+    } as PlayerStats
   };
   private maxEnemies: number = 20;
   private lastCleanupTime: number = 0;
   private gameStartTime!: number;
   private isGameOver: boolean = false;
+  private isUpgradeModalOpen: boolean = false;
+  private pendingUpgradeOptions: any[] = [];
 
   constructor() {
     super({ key: 'GameScene' });
@@ -60,11 +69,19 @@ export class GameScene extends Phaser.Scene {
       maxHealth: 100,
       killCount: 0,
       gameTime: 0,
-      playerSpeed: 200
+      playerStats: {
+        speed: 200,
+        bulletCount: 1,
+        defense: 0,
+        maxHealth: 100,
+        health: 100
+      }
     };
     
     // Reset game state flags
     this.isGameOver = false;
+    this.isUpgradeModalOpen = false;
+    this.pendingUpgradeOptions = [];
     
     // Adjust max enemies based on level for performance
     this.maxEnemies = Math.min(20 + this.gameStats.level * 2, 40);
@@ -75,7 +92,7 @@ export class GameScene extends Phaser.Scene {
     
     
     // Create player
-    this.player = new Player(this, 500, 350, this.gameStats.playerSpeed);
+    this.player = new Player(this, 500, 350, this.gameStats.playerStats);
     
     // Create groups
     this.enemies = this.physics.add.group({
@@ -121,11 +138,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isGameOver) {
+    if (this.isGameOver || this.isUpgradeModalOpen) {
       return;
     }
     
     this.player.update(this.cursors);
+    
+    // Sync game stats with player stats
+    this.gameStats.health = this.player.stats.health;
+    this.gameStats.maxHealth = this.player.stats.maxHealth;
     
     // Update game time using real timestamp
     this.gameStats.gameTime = Math.floor((Date.now() - this.gameStartTime) / 1000);
@@ -222,15 +243,26 @@ export class GameScene extends Phaser.Scene {
   private shoot() {
     const nearestEnemy = this.findNearestEnemy();
     if (nearestEnemy) {
-      const bullet = new Bullet(this, this.player.x, this.player.y, nearestEnemy);
-      this.bullets.add(bullet);
+      // Fire multiple bullets based on bulletCount
+      const bulletCount = this.player.stats.bulletCount;
+      const angleSpread = bulletCount > 1 ? Math.PI / 6 : 0; // 30 degree spread for multiple bullets
       
-      // Ensure velocity is set after adding to group
-      const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, nearestEnemy.x, nearestEnemy.y);
-      bullet.setVelocity(
-        Math.cos(angle) * 400,
-        Math.sin(angle) * 400
-      );
+      for (let i = 0; i < bulletCount; i++) {
+        const bullet = new Bullet(this, this.player.x, this.player.y, nearestEnemy);
+        this.bullets.add(bullet);
+        
+        // Calculate angle with spread for multiple bullets
+        let baseAngle = Phaser.Math.Angle.Between(this.player.x, this.player.y, nearestEnemy.x, nearestEnemy.y);
+        if (bulletCount > 1) {
+          const offsetAngle = (i - (bulletCount - 1) / 2) * (angleSpread / (bulletCount - 1));
+          baseAngle += offsetAngle;
+        }
+        
+        bullet.setVelocity(
+          Math.cos(baseAngle) * 400,
+          Math.sin(baseAngle) * 400
+        );
+      }
     }
   }
 
@@ -268,10 +300,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private playerHitEnemy(_player: any, enemy: any) {
-    this.gameStats.health -= 10;
+    this.player.takeDamage(10);
     enemy.destroy();
     
-    if (this.gameStats.health <= 0) {
+    if (this.player.isDead()) {
       this.gameOver();
     }
   }
@@ -280,12 +312,82 @@ export class GameScene extends Phaser.Scene {
     this.gameStats.level++;
     this.gameStats.experience = 0;
     this.gameStats.experienceToNext = Math.floor(this.gameStats.experienceToNext * 1.2);
-    this.gameStats.maxHealth += 20;
-    this.gameStats.health = this.gameStats.maxHealth;
-    this.gameStats.playerSpeed += 25; // Increase speed by 25 each level (more balanced)
     
-    // Update player speed
-    this.player.setSpeed(this.gameStats.playerSpeed);
+    // Pause game and show upgrade options
+    this.isUpgradeModalOpen = true;
+    this.physics.pause(); // 暂停物理引擎
+    this.time.paused = true; // 暂停定时器
+    this.showUpgradeOptions();
+  }
+
+  private showUpgradeOptions() {
+    // Generate 3 random upgrade options
+    const allUpgrades = [
+      {
+        id: 'bullets',
+        title: '增加子弹数量',
+        description: '每次射击发射更多子弹',
+        icon: '🔫',
+        effect: () => {
+          this.player.updateStats({ bulletCount: this.player.stats.bulletCount + 1 });
+          this.gameStats.playerStats.bulletCount = this.player.stats.bulletCount;
+        }
+      },
+      {
+        id: 'speed',
+        title: '提高移动速度',
+        description: '角色移动更快',
+        icon: '⚡',
+        effect: () => {
+          this.player.updateStats({ speed: this.player.stats.speed + 30 });
+          this.gameStats.playerStats.speed = this.player.stats.speed;
+        }
+      },
+      {
+        id: 'heal',
+        title: '回复血量',
+        description: '恢复总血量的一半',
+        icon: '❤️',
+        effect: () => {
+          const healAmount = Math.floor(this.player.stats.maxHealth / 2);
+          this.player.heal(healAmount);
+          this.gameStats.health = this.player.stats.health;
+        }
+      },
+      {
+        id: 'defense',
+        title: '增加防御力',
+        description: '减少受到的伤害',
+        icon: '🛡️',
+        effect: () => {
+          this.player.updateStats({ defense: this.player.stats.defense + 2 });
+          this.gameStats.playerStats.defense = this.player.stats.defense;
+        }
+      }
+    ];
+
+    // Randomly select 3 upgrades
+    const shuffled = allUpgrades.sort(() => 0.5 - Math.random());
+    this.pendingUpgradeOptions = shuffled.slice(0, 3);
+
+    // Show upgrade modal via global callback
+    const showUpgradeCallback = (window as any).__SHOW_UPGRADE_CALLBACK__;
+    if (showUpgradeCallback) {
+      showUpgradeCallback(this.pendingUpgradeOptions, this.gameStats.level);
+    }
+  }
+
+  public selectUpgrade(upgradeId: string) {
+    const selectedUpgrade = this.pendingUpgradeOptions.find(u => u.id === upgradeId);
+    if (selectedUpgrade) {
+      selectedUpgrade.effect();
+      this.isUpgradeModalOpen = false;
+      this.pendingUpgradeOptions = [];
+      
+      // Resume game
+      this.physics.resume(); // 恢复物理引擎
+      this.time.paused = false; // 恢复定时器
+    }
   }
 
   private gameOver() {
