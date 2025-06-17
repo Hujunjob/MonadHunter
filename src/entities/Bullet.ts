@@ -18,7 +18,7 @@ export class Bullet extends Phaser.Physics.Arcade.Sprite {
 
   update() {
     // Remove if out of bounds
-    if (this.x < -50 || this.x > 850 || this.y < -50 || this.y > 650) {
+    if (this.x < -50 || this.x > 1050 || this.y < -50 || this.y > 750) {
       this.destroy();
     }
   }

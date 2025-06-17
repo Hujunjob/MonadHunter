@@ -69,7 +69,7 @@ export class GameScene extends Phaser.Scene {
     this.gameStartTime = this.time.now;
     
     // Create player
-    this.player = new Player(this, 400, 300, this.gameStats.playerSpeed);
+    this.player = new Player(this, 500, 350, this.gameStats.playerSpeed);
     
     // Create groups
     this.enemies = this.physics.add.group({
@@ -139,7 +139,7 @@ export class GameScene extends Phaser.Scene {
     // Quick cleanup of out-of-bounds objects
     this.bullets.children.entries.forEach((bullet) => {
       const b = bullet as Phaser.Physics.Arcade.Sprite;
-      if (b.x < -100 || b.x > 900 || b.y < -100 || b.y > 700) {
+      if (b.x < -100 || b.x > 1100 || b.y < -100 || b.y > 800) {
         b.destroy();
       }
     });
@@ -156,20 +156,20 @@ export class GameScene extends Phaser.Scene {
     
     switch (side) {
       case 0: // top
-        x = Phaser.Math.Between(0, 800);
+        x = Phaser.Math.Between(0, 1000);
         y = -50;
         break;
       case 1: // right
-        x = 850;
-        y = Phaser.Math.Between(0, 600);
+        x = 1050;
+        y = Phaser.Math.Between(0, 700);
         break;
       case 2: // bottom
-        x = Phaser.Math.Between(0, 800);
-        y = 650;
+        x = Phaser.Math.Between(0, 1000);
+        y = 750;
         break;
       case 3: // left
         x = -50;
-        y = Phaser.Math.Between(0, 600);
+        y = Phaser.Math.Between(0, 700);
         break;
       default:
         x = 0;
