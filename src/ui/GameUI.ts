@@ -10,6 +10,11 @@ interface GameStats {
   gameTime: number;
 }
 
+interface WalletInfo {
+  connected: boolean;
+  address?: string;
+}
+
 export class GameUI {
   private scene: Phaser.Scene;
   private healthText!: Phaser.GameObjects.Text;
@@ -20,6 +25,8 @@ export class GameUI {
   private killCountText!: Phaser.GameObjects.Text;
   private gameTimeText!: Phaser.GameObjects.Text;
   private antiCheatStatus!: Phaser.GameObjects.Text;
+  private walletStatus!: Phaser.GameObjects.Text;
+  private observerStatus!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
     this.scene = scene;
@@ -76,6 +83,18 @@ export class GameUI {
       fontSize: '16px',
       color: '#00ff00'
     });
+
+    // Wallet status indicator
+    this.walletStatus = this.scene.add.text(700, 80, '', {
+      fontSize: '14px',
+      color: '#676FFF'
+    });
+
+    // Observer mode status
+    this.observerStatus = this.scene.add.text(700, 110, '', {
+      fontSize: '14px',
+      color: '#ff6600'
+    });
   }
 
   setAntiCheatStatus(enabled: boolean) {
@@ -85,6 +104,30 @@ export class GameUI {
     } else {
       this.antiCheatStatus.setText('⚠️ Anti-Cheat: OFF');
       this.antiCheatStatus.setColor('#ffaa00');
+    }
+  }
+
+  setWalletStatus(walletInfo: WalletInfo) {
+    if (walletInfo.connected && walletInfo.address) {
+      const shortAddress = `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-4)}`;
+      this.walletStatus.setText(`💳 ${shortAddress}`);
+      this.walletStatus.setColor('#676FFF');
+    } else {
+      this.walletStatus.setText('❌ No Wallet');
+      this.walletStatus.setColor('#ff6666');
+    }
+  }
+
+  setObserverMode(enabled: boolean, targetAddress?: string) {
+    if (enabled && targetAddress) {
+      const shortAddress = `${targetAddress.slice(0, 6)}...${targetAddress.slice(-4)}`;
+      this.observerStatus.setText(`👁️ Watching: ${shortAddress}`);
+      this.observerStatus.setColor('#ff6600');
+    } else if (enabled) {
+      this.observerStatus.setText('👁️ Observer Mode');
+      this.observerStatus.setColor('#ff6600');
+    } else {
+      this.observerStatus.setText('');
     }
   }
 

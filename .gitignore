@@ -15,7 +15,7 @@ multisynq-js.txt
 .env.development.local
 .env.test.local
 .env.production.local
-
+package-lock.json
 # IDE files
 .vscode/
 .idea/

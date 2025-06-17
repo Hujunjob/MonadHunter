@@ -20,6 +20,8 @@ export class GameScene extends Phaser.Scene {
   private multiSynqManager!: MultiSynqManager;
   private gameView!: GameView;
   private isMultiSynqEnabled = false;
+  private isObserverMode = false;
+  private observingAddress: string | null = null;
   
   private gameStats = {
     level: 1,
@@ -63,6 +65,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   private async finishCreate() {
+    // Check if we're in observer mode
+    const observerInfo = (window as any).__OBSERVER_MODE__;
+    if (observerInfo && observerInfo.enabled) {
+      this.isObserverMode = true;
+      this.observingAddress = observerInfo.targetAddress;
+      console.log('Starting observer mode for:', this.observingAddress);
+    }
+    
     // Reset game stats
     this.gameStats = {
       level: 1,
@@ -103,6 +113,12 @@ export class GameScene extends Phaser.Scene {
     // Set initial anti-cheat status
     this.gameUI.setAntiCheatStatus(this.isMultiSynqEnabled);
     
+    // Set observer mode status
+    this.gameUI.setObserverMode(this.isObserverMode, this.observingAddress || undefined);
+    
+    // Set wallet status
+    this.updateWalletStatus();
+    
     if (!this.isMultiSynqEnabled) {
       // Only set up local collisions if MultiSynq is not enabled
       this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
@@ -122,7 +138,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isMultiSynqEnabled) {
+    if (this.isObserverMode) {
+      this.updateObserverMode();
+    } else if (this.isMultiSynqEnabled) {
       this.updateMultiSynq();
     } else {
       this.updateLocal();
@@ -162,6 +180,49 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
       this.gameView.sendShootInput();
     }
+  }
+
+  private updateObserverMode() {
+    // In observer mode, we only update the display based on observed data
+    // No input processing, just visual updates
+    
+    // Update game time display
+    this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
+    
+    // Simulate observing another player's game
+    // In a real implementation, this would fetch data from MultiSynq for the specific player
+    this.simulateObservedGameplay();
+    
+    // Update UI
+    this.gameUI.update(this.gameStats);
+  }
+
+  private simulateObservedGameplay() {
+    // This is a simulation of what observing another player would look like
+    // In a real implementation, you would:
+    // 1. Subscribe to the target player's game state via MultiSynq
+    // 2. Update your local display based on their game state
+    // 3. Show their player position, enemies, bullets, stats etc.
+    
+    // For demo purposes, let's simulate some basic gameplay
+    const time = this.time.now / 1000;
+    
+    // Simulate player movement (circular pattern)
+    const centerX = 400;
+    const centerY = 300;
+    const radius = 100;
+    const speed = 0.5;
+    
+    const observedPlayerX = centerX + Math.cos(time * speed) * radius;
+    const observedPlayerY = centerY + Math.sin(time * speed) * radius;
+    
+    this.player.setPosition(observedPlayerX, observedPlayerY);
+    
+    // Simulate stats progression
+    this.gameStats.killCount = Math.floor(time / 2); // 1 kill every 2 seconds
+    this.gameStats.experience = (this.gameStats.killCount * 10) % this.gameStats.experienceToNext;
+    this.gameStats.level = Math.floor(this.gameStats.killCount / 10) + 1;
+    this.gameStats.health = Math.max(50, 100 - Math.floor(time / 10) * 5); // Lose health over time
   }
 
   private spawnEnemy() {
@@ -371,5 +432,21 @@ export class GameScene extends Phaser.Scene {
       );
       this.bullets.add(bullet);
     });
+  }
+
+  private updateWalletStatus() {
+    // Try to get wallet info from global window object (set by App component)
+    const walletInfo = (window as any).__WALLET_INFO__;
+    if (walletInfo) {
+      this.gameUI.setWalletStatus({
+        connected: walletInfo.connected,
+        address: walletInfo.address
+      });
+    } else {
+      // Fallback - no wallet connected
+      this.gameUI.setWalletStatus({
+        connected: false
+      });
+    }
   }
 }
