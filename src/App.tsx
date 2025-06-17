@@ -42,6 +42,14 @@ function App() {
       setAppState('wallet');
       resetGame();
     }
+    const appElement = document.querySelector('.App') as HTMLElement;
+    if (appElement) {
+      if (appState === "playing") {
+        appElement.style.width = "22vw";
+      } else {
+        appElement.style.width = "100vw";
+      }
+    }
   }, [isConnected, appState]);
 
   // Update global wallet info for game access
