@@ -23,6 +23,8 @@ export class GameScene extends Phaser.Scene {
     gameTime: 0,
     playerSpeed: 200
   };
+  private maxEnemies: number = 20;
+  private lastCleanupTime: number = 0;
   private gameStartTime!: number;
 
   constructor() {
@@ -60,6 +62,9 @@ export class GameScene extends Phaser.Scene {
       playerSpeed: 200
     };
     
+    // Adjust max enemies based on level for performance
+    this.maxEnemies = Math.min(20 + this.gameStats.level * 2, 40);
+    
     // Record game start time
     this.gameStartTime = this.time.now;
     
@@ -92,10 +97,18 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
     this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
     
-    // Start enemy spawning
+    // Start enemy spawning with dynamic rate
     this.time.addEvent({
-      delay: 667,
+      delay: 500,
       callback: this.spawnEnemy,
+      callbackScope: this,
+      loop: true
+    });
+    
+    // Add cleanup timer
+    this.time.addEvent({
+      delay: 5000,
+      callback: this.cleanupObjects,
       callbackScope: this,
       loop: true
     });
@@ -107,16 +120,37 @@ export class GameScene extends Phaser.Scene {
     // Update game time
     this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
     
-    // Handle shooting input
+    // Handle shooting input with rate limiting
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
       this.shoot();
+    }
+    
+    // Throttled cleanup every 2 seconds
+    if (this.time.now - this.lastCleanupTime > 2000) {
+      this.lastCleanupTime = this.time.now;
+      this.quickCleanup();
     }
     
     // Update UI
     this.gameUI.update(this.gameStats);
   }
+  
+  private quickCleanup() {
+    // Quick cleanup of out-of-bounds objects
+    this.bullets.children.entries.forEach((bullet) => {
+      const b = bullet as Phaser.Physics.Arcade.Sprite;
+      if (b.x < -100 || b.x > 900 || b.y < -100 || b.y > 700) {
+        b.destroy();
+      }
+    });
+  }
 
   private spawnEnemy() {
+    // Limit enemy count for performance
+    if (this.enemies.children.size >= this.maxEnemies) {
+      return;
+    }
+    
     const side = Phaser.Math.Between(0, 3);
     let x, y;
     
@@ -144,6 +178,35 @@ export class GameScene extends Phaser.Scene {
     
     const enemy = new Enemy(this, x, y, this.player, this.gameStats.level);
     this.enemies.add(enemy);
+  }
+  
+  private cleanupObjects() {
+    // Clean up distant bullets
+    this.bullets.children.entries.forEach((bullet) => {
+      const b = bullet as Phaser.Physics.Arcade.Sprite;
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y, b.x, b.y
+      );
+      if (distance > 1000) {
+        b.destroy();
+      }
+    });
+    
+    // Clean up distant enemies if too many
+    if (this.enemies.children.size > this.maxEnemies * 0.8) {
+      const sortedEnemies = this.enemies.children.entries
+        .map(e => {
+          const enemy = e as Phaser.Physics.Arcade.Sprite;
+          return { enemy, distance: Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y) };
+        })
+        .sort((a, b) => b.distance - a.distance);
+      
+      // Remove the furthest 20% of enemies
+      const toRemove = Math.floor(sortedEnemies.length * 0.2);
+      for (let i = 0; i < toRemove; i++) {
+        sortedEnemies[i].enemy.destroy();
+      }
+    }
   }
 
   private shoot() {
@@ -209,7 +272,7 @@ export class GameScene extends Phaser.Scene {
     this.gameStats.experienceToNext = Math.floor(this.gameStats.experienceToNext * 1.2);
     this.gameStats.maxHealth += 20;
     this.gameStats.health = this.gameStats.maxHealth;
-    this.gameStats.playerSpeed += 25; // Increase speed by 25 each level
+    this.gameStats.playerSpeed += 25; // Increase speed by 25 each level (more balanced)
     
     // Update player speed
     this.player.setSpeed(this.gameStats.playerSpeed);
