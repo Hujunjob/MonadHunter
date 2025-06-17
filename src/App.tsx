@@ -3,17 +3,14 @@ import { useAccount } from 'wagmi';
 import { Game } from './Game';
 import { WalletConnect } from './components/WalletConnect';
 import { GameModeSelection } from './components/GameModeSelection';
-import { ObserverMode } from './components/ObserverMode';
 import './App.css';
 
-type AppState = 'wallet' | 'mode-selection' | 'playing' | 'observing';
+type AppState = 'wallet' | 'mode-selection' | 'playing';
 
 function App() {
   const { isConnected, address } = useAccount();
   const gameRef = useRef<Game | null>(null);
   const [appState, setAppState] = useState<AppState>('wallet');
-  const [showObserverModal, setShowObserverModal] = useState(false);
-  const [observingAddress, setObservingAddress] = useState<string | null>(null);
 
   const startGame = () => {
     if (!gameRef.current) {
@@ -28,9 +25,6 @@ function App() {
       gameRef.current = null;
     }
     
-    // Clear any global game state
-    delete (window as any).__OBSERVER_MODE__;
-    
     // Clean up any remaining canvas elements
     const gameContainer = document.getElementById('game-container');
     if (gameContainer) {
@@ -38,32 +32,6 @@ function App() {
     }
     
     setAppState('mode-selection');
-    setObservingAddress(null);
-  };
-
-  const openObserverMode = () => {
-    setShowObserverModal(true);
-  };
-
-  const startObserving = (playerAddress: string) => {
-    setObservingAddress(playerAddress);
-    setShowObserverModal(false);
-    
-    // Initialize game in observer mode
-    if (!gameRef.current) {
-      gameRef.current = new Game();
-      // Set observer mode flag in game
-      (window as any).__OBSERVER_MODE__ = {
-        enabled: true,
-        targetAddress: playerAddress
-      };
-    }
-    
-    setAppState('observing');
-  };
-
-  const closeObserverModal = () => {
-    setShowObserverModal(false);
   };
 
   // Update app state based on wallet connection
@@ -108,39 +76,22 @@ function App() {
       {appState === 'mode-selection' && isConnected && (
         <GameModeSelection 
           onStartGame={startGame}
-          onOpenObserverMode={openObserverMode}
         />
       )}
 
       {/* Game Running Phase */}
-      {(appState === 'playing' || appState === 'observing') && (
+      {appState === 'playing' && (
         <div className="game-section">
           <div className="game-controls">
-            {appState === 'observing' && observingAddress && (
-              <div className="observer-info">
-                <span className="observer-badge">👁️ Observer Mode</span>
-                <span className="observing-address">
-                  Watching: {observingAddress.slice(0, 6)}...{observingAddress.slice(-4)}
-                </span>
-              </div>
-            )}
             <button 
               className="reset-game-btn"
               onClick={resetGame}
             >
-              {appState === 'observing' ? 'Stop Observing' : 'Back to Menu'}
+              Back to Menu
             </button>
           </div>
           <div id="game-container"></div>
         </div>
-      )}
-
-      {/* Observer Mode Modal */}
-      {showObserverModal && (
-        <ObserverMode 
-          onStartObserving={startObserving}
-          onClose={closeObserverModal}
-        />
       )}
     </div>
   );

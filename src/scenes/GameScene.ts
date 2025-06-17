@@ -3,9 +3,6 @@ import { Player } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { Bullet } from '../entities/Bullet';
 import { GameUI } from '../ui/GameUI';
-import { MultiSynqManager } from '../sync/MultiSynqManager';
-import { GameView } from '../sync/GameView';
-import type { GameState } from '../sync/GameModel';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
@@ -15,13 +12,6 @@ export class GameScene extends Phaser.Scene {
   private gameUI!: GameUI;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private enterKey!: Phaser.Input.Keyboard.Key;
-  
-  // MultiSynq integration
-  private multiSynqManager!: MultiSynqManager;
-  private gameView!: GameView;
-  private isMultiSynqEnabled = false;
-  private isObserverMode = false;
-  private observingAddress: string | null = null;
   
   private gameStats = {
     level: 1,
@@ -58,21 +48,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    // Initialize MultiSynq asynchronously
-    this.initializeMultiSynq().then(() => {
-      this.finishCreate();
-    });
-  }
-
-  private async finishCreate() {
-    // Check if we're in observer mode
-    const observerInfo = (window as any).__OBSERVER_MODE__;
-    if (observerInfo && observerInfo.enabled) {
-      this.isObserverMode = true;
-      this.observingAddress = observerInfo.targetAddress;
-      console.log('Starting observer mode for:', this.observingAddress);
-    }
-    
     // Reset game stats
     this.gameStats = {
       level: 1,
@@ -110,44 +85,23 @@ export class GameScene extends Phaser.Scene {
     // Create UI
     this.gameUI = new GameUI(this, this.gameStats);
     
-    // Set initial anti-cheat status
-    this.gameUI.setAntiCheatStatus(this.isMultiSynqEnabled);
-    
-    // Set observer mode status
-    this.gameUI.setObserverMode(this.isObserverMode, this.observingAddress || undefined);
-    
     // Set wallet status
     this.updateWalletStatus();
     
-    if (!this.isMultiSynqEnabled) {
-      // Only set up local collisions if MultiSynq is not enabled
-      this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
-      this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
-      
-      // Start local enemy spawning
-      this.time.addEvent({
-        delay: 667,
-        callback: this.spawnEnemy,
-        callbackScope: this,
-        loop: true
-      });
-    } else {
-      // Start synchronized game
-      this.gameView.startGame();
-    }
+    // Set up collisions
+    this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
+    this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
+    
+    // Start enemy spawning
+    this.time.addEvent({
+      delay: 667,
+      callback: this.spawnEnemy,
+      callbackScope: this,
+      loop: true
+    });
   }
 
   update() {
-    if (this.isObserverMode) {
-      this.updateObserverMode();
-    } else if (this.isMultiSynqEnabled) {
-      this.updateMultiSynq();
-    } else {
-      this.updateLocal();
-    }
-  }
-
-  private updateLocal() {
     this.player.update(this.cursors);
     
     // Update game time
@@ -160,71 +114,6 @@ export class GameScene extends Phaser.Scene {
     
     // Update UI
     this.gameUI.update(this.gameStats);
-  }
-
-  private updateMultiSynq() {
-    // Send player input to MultiSynq model
-    const direction = { x: 0, y: 0 };
-    
-    if (this.cursors.left.isDown) direction.x -= 1;
-    if (this.cursors.right.isDown) direction.x += 1;
-    if (this.cursors.up.isDown) direction.y -= 1;
-    if (this.cursors.down.isDown) direction.y += 1;
-    
-    // Send movement input
-    if (direction.x !== 0 || direction.y !== 0) {
-      this.gameView.sendMoveInput(direction);
-    }
-    
-    // Handle shooting input
-    if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-      this.gameView.sendShootInput();
-    }
-  }
-
-  private updateObserverMode() {
-    // In observer mode, we only update the display based on observed data
-    // No input processing, just visual updates
-    
-    if (this.isMultiSynqEnabled && this.observingAddress) {
-      // Real observer mode: get state from MultiSynq for the target player
-      this.observePlayerGameState();
-    } else {
-      // Fallback: simulate gameplay if MultiSynq is not available
-      this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
-      this.simulateObservedGameplay();
-    }
-    
-    // Update UI
-    this.gameUI.update(this.gameStats);
-  }
-
-  private simulateObservedGameplay() {
-    // This is a simulation of what observing another player would look like
-    // In a real implementation, you would:
-    // 1. Subscribe to the target player's game state via MultiSynq
-    // 2. Update your local display based on their game state
-    // 3. Show their player position, enemies, bullets, stats etc.
-    
-    // For demo purposes, let's simulate some basic gameplay
-    const time = this.time.now / 1000;
-    
-    // Simulate player movement (circular pattern)
-    const centerX = 400;
-    const centerY = 300;
-    const radius = 100;
-    const speed = 0.5;
-    
-    const observedPlayerX = centerX + Math.cos(time * speed) * radius;
-    const observedPlayerY = centerY + Math.sin(time * speed) * radius;
-    
-    this.player.setPosition(observedPlayerX, observedPlayerY);
-    
-    // Simulate stats progression
-    this.gameStats.killCount = Math.floor(time / 2); // 1 kill every 2 seconds
-    this.gameStats.experience = (this.gameStats.killCount * 10) % this.gameStats.experienceToNext;
-    this.gameStats.level = Math.floor(this.gameStats.killCount / 10) + 1;
-    this.gameStats.health = Math.max(50, 100 - Math.floor(time / 10) * 5); // Lose health over time
   }
 
   private spawnEnemy() {
@@ -337,132 +226,10 @@ export class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
     
     // Add restart instruction
-    this.add.text(400, 370, 'Click Restart to play again', {
+    this.add.text(400, 370, 'Click Back to Menu to play again', {
       fontSize: '24px',
       color: '#cccccc'
     }).setOrigin(0.5);
-  }
-
-  // MultiSynq initialization
-  private async initializeMultiSynq() {
-    try {
-      // Check if MultiSynq is available (has API key in environment)
-      if (!MultiSynqManager.isAvailable()) {
-        console.log('MultiSynq API key not found in environment, playing in local mode');
-        this.isMultiSynqEnabled = false;
-        return;
-      }
-
-      // Automatically enable anti-cheat protection
-      console.log('Initializing MultiSynq anti-cheat protection...');
-
-      this.multiSynqManager = new MultiSynqManager();
-      
-      const { view } = await this.multiSynqManager.initialize();
-      this.gameView = view;
-      this.isMultiSynqEnabled = true;
-
-      // Set up state update callback
-      this.gameView.onStateChange((state: GameState) => {
-        this.syncGameState(state);
-      });
-
-      // Set up game over callback
-      this.gameView.onGameEnd((stats: any) => {
-        console.log('Game ended with stats:', stats);
-        this.gameOver();
-      });
-
-      console.log('✅ MultiSynq anti-cheat protection enabled');
-    } catch (error) {
-      console.error('Failed to initialize MultiSynq, falling back to local mode:', error);
-      this.isMultiSynqEnabled = false;
-    }
-  }
-
-  // Sync game state from server
-  private syncGameState(state: GameState) {
-    // Update local game stats
-    this.gameStats = {
-      level: state.level,
-      experience: state.experience,
-      experienceToNext: state.experienceToNext,
-      health: state.health,
-      maxHealth: state.maxHealth,
-      killCount: state.killCount,
-      gameTime: state.gameTime,
-      playerSpeed: state.playerSpeed
-    };
-
-    // Update player position
-    this.player.setPosition(state.playerPosition.x, state.playerPosition.y);
-
-    // Sync enemies
-    this.syncEnemies(state.enemies);
-    
-    // Sync bullets
-    this.syncBullets(state.bullets);
-
-    // Update UI
-    this.gameUI.update(this.gameStats);
-  }
-
-  private syncEnemies(serverEnemies: any[]) {
-    // Clear existing enemies
-    this.enemies.clear(true, true);
-
-    // Create enemies from server state
-    serverEnemies.forEach(enemyData => {
-      const enemy = new Enemy(this, enemyData.x, enemyData.y, this.player, this.gameStats.level);
-      enemy.setData('serverId', enemyData.id);
-      enemy.setData('health', enemyData.health);
-      this.enemies.add(enemy);
-    });
-  }
-
-  private syncBullets(serverBullets: any[]) {
-    // Clear existing bullets
-    this.bullets.clear(true, true);
-
-    // Create bullets from server state
-    serverBullets.forEach(bulletData => {
-      const bullet = new Bullet(this, bulletData.x, bulletData.y, { x: bulletData.targetX, y: bulletData.targetY } as any);
-      bullet.setData('serverId', bulletData.id);
-      bullet.setVelocity(
-        (bulletData.targetX - bulletData.x) / Math.sqrt(Math.pow(bulletData.targetX - bulletData.x, 2) + Math.pow(bulletData.targetY - bulletData.y, 2)) * bulletData.speed,
-        (bulletData.targetY - bulletData.y) / Math.sqrt(Math.pow(bulletData.targetX - bulletData.x, 2) + Math.pow(bulletData.targetY - bulletData.y, 2)) * bulletData.speed
-      );
-      this.bullets.add(bullet);
-    });
-  }
-
-  private observePlayerGameState() {
-    try {
-      // In a real implementation with MultiSynq, you would:
-      // 1. Subscribe to the target player's game state updates
-      // 2. Get their current game state from MultiSynq servers
-      // 3. Update local display to match their game
-      
-      if (this.multiSynqManager && this.observingAddress) {
-        // TODO: Implement MultiSynq observer functionality
-        // For now, we'll show a placeholder message and fall back to simulation
-        console.log(`Attempting to observe player: ${this.observingAddress}`);
-        
-        // This is where you would call MultiSynq's API to get another player's state
-        // Example (pseudo-code):
-        // const playerState = await this.multiSynqManager.getPlayerState(this.observingAddress);
-        // this.syncGameState(playerState);
-        
-        // Fallback to simulation for now
-        this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
-        this.simulateObservedGameplay();
-      }
-    } catch (error) {
-      console.error('Error observing player game state:', error);
-      // Fallback to simulation
-      this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
-      this.simulateObservedGameplay();
-    }
   }
 
   private updateWalletStatus() {

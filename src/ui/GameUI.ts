@@ -24,9 +24,7 @@ export class GameUI {
   private restartButton!: Phaser.GameObjects.Text;
   private killCountText!: Phaser.GameObjects.Text;
   private gameTimeText!: Phaser.GameObjects.Text;
-  private antiCheatStatus!: Phaser.GameObjects.Text;
   private walletStatus!: Phaser.GameObjects.Text;
-  private observerStatus!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
     this.scene = scene;
@@ -67,7 +65,7 @@ export class GameUI {
     });
 
     // Restart button
-    this.restartButton = this.scene.add.text(700, 10, 'Restart', {
+    this.restartButton = this.scene.add.text(700, 10, 'Back to Menu', {
       fontSize: '20px',
       color: '#ffffff',
       backgroundColor: '#666666',
@@ -82,33 +80,11 @@ export class GameUI {
       }
     });
 
-    // Anti-cheat status indicator
-    this.antiCheatStatus = this.scene.add.text(700, 50, '', {
-      fontSize: '16px',
-      color: '#00ff00'
-    });
-
     // Wallet status indicator
-    this.walletStatus = this.scene.add.text(700, 80, '', {
+    this.walletStatus = this.scene.add.text(700, 50, '', {
       fontSize: '14px',
       color: '#676FFF'
     });
-
-    // Observer mode status
-    this.observerStatus = this.scene.add.text(700, 110, '', {
-      fontSize: '14px',
-      color: '#ff6600'
-    });
-  }
-
-  setAntiCheatStatus(enabled: boolean) {
-    if (enabled) {
-      this.antiCheatStatus.setText('🛡️ Anti-Cheat: ON');
-      this.antiCheatStatus.setColor('#00ff00');
-    } else {
-      this.antiCheatStatus.setText('⚠️ Anti-Cheat: OFF');
-      this.antiCheatStatus.setColor('#ffaa00');
-    }
   }
 
   setWalletStatus(walletInfo: WalletInfo) {
@@ -119,19 +95,6 @@ export class GameUI {
     } else {
       this.walletStatus.setText('❌ No Wallet');
       this.walletStatus.setColor('#ff6666');
-    }
-  }
-
-  setObserverMode(enabled: boolean, targetAddress?: string) {
-    if (enabled && targetAddress) {
-      const shortAddress = `${targetAddress.slice(0, 6)}...${targetAddress.slice(-4)}`;
-      this.observerStatus.setText(`👁️ Watching: ${shortAddress}`);
-      this.observerStatus.setColor('#ff6600');
-    } else if (enabled) {
-      this.observerStatus.setText('👁️ Observer Mode');
-      this.observerStatus.setColor('#ff6600');
-    } else {
-      this.observerStatus.setText('');
     }
   }
 
