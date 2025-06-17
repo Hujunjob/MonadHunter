@@ -14,6 +14,7 @@ export class GameUI {
   private levelText!: Phaser.GameObjects.Text;
   private expBar!: Phaser.GameObjects.Graphics;
   private expBarBg!: Phaser.GameObjects.Graphics;
+  private restartButton!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
     this.scene = scene;
@@ -40,6 +41,18 @@ export class GameUI {
 
     // Experience bar
     this.expBar = this.scene.add.graphics();
+
+    // Restart button
+    this.restartButton = this.scene.add.text(700, 10, 'Restart', {
+      fontSize: '20px',
+      color: '#ffffff',
+      backgroundColor: '#666666',
+      padding: { x: 10, y: 5 }
+    });
+    this.restartButton.setInteractive();
+    this.restartButton.on('pointerdown', () => {
+      this.scene.scene.restart();
+    });
   }
 
   update(stats: GameStats) {

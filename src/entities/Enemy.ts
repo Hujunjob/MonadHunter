@@ -4,7 +4,6 @@ import { Player } from './Player';
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private speed = 50;
   private health = 50;
-  private maxHealth = 50;
   private player: Player;
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {

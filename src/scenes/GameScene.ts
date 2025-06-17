@@ -10,8 +10,8 @@ export class GameScene extends Phaser.Scene {
   private bullets!: Phaser.Physics.Arcade.Group;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private gameUI!: GameUI;
-  private enemySpawnTimer!: Phaser.Time.TimerEvent;
-  private autoAttackTimer!: Phaser.Time.TimerEvent;
+  private spaceKey!: Phaser.Input.Keyboard.Key;
+  private enterKey!: Phaser.Input.Keyboard.Key;
   
   private gameStats = {
     level: 1,
@@ -60,6 +60,8 @@ export class GameScene extends Phaser.Scene {
     
     // Create input
     this.cursors = this.input.keyboard?.createCursorKeys()!;
+    this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)!;
+    this.enterKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)!;
     
     // Create UI
     this.gameUI = new GameUI(this, this.gameStats);
@@ -69,17 +71,9 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
     
     // Start spawning enemies
-    this.enemySpawnTimer = this.time.addEvent({
+    this.time.addEvent({
       delay: 2000,
       callback: this.spawnEnemy,
-      callbackScope: this,
-      loop: true
-    });
-    
-    // Start auto attack
-    this.autoAttackTimer = this.time.addEvent({
-      delay: 500,
-      callback: this.autoAttack,
       callbackScope: this,
       loop: true
     });
@@ -87,6 +81,11 @@ export class GameScene extends Phaser.Scene {
 
   update() {
     this.player.update(this.cursors);
+    
+    // Handle shooting input
+    if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      this.shoot();
+    }
     
     // Update UI
     this.gameUI.update(this.gameStats);
@@ -122,11 +121,18 @@ export class GameScene extends Phaser.Scene {
     this.enemies.add(enemy);
   }
 
-  private autoAttack() {
+  private shoot() {
     const nearestEnemy = this.findNearestEnemy();
     if (nearestEnemy) {
       const bullet = new Bullet(this, this.player.x, this.player.y, nearestEnemy);
       this.bullets.add(bullet);
+      
+      // Ensure velocity is set after adding to group
+      const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, nearestEnemy.x, nearestEnemy.y);
+      bullet.setVelocity(
+        Math.cos(angle) * 400,
+        Math.sin(angle) * 400
+      );
     }
   }
 
@@ -162,7 +168,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private playerHitEnemy(player: any, enemy: any) {
+  private playerHitEnemy(_player: any, enemy: any) {
     this.gameStats.health -= 10;
     enemy.destroy();
     
