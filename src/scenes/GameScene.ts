@@ -283,22 +283,19 @@ export class GameScene extends Phaser.Scene {
   // MultiSynq initialization
   private async initializeMultiSynq() {
     try {
-      // Ask user if they want to enable anti-cheat
-      const enableAntiCheat = confirm(
-        'Enable MultiSynq Anti-Cheat Protection?\n\n' +
-        'This will prevent cheating by validating all game actions on the server.\n' +
-        'Click OK to enable, or Cancel to play in local mode.'
-      );
-
-      if (!enableAntiCheat) {
-        console.log('Playing in local mode');
+      // Check if MultiSynq is available (has API key in environment)
+      if (!MultiSynqManager.isAvailable()) {
+        console.log('MultiSynq API key not found in environment, playing in local mode');
+        this.isMultiSynqEnabled = false;
         return;
       }
 
-      const apiKey = await MultiSynqManager.getApiKey();
+      // Automatically enable anti-cheat protection
+      console.log('Initializing MultiSynq anti-cheat protection...');
+
       this.multiSynqManager = new MultiSynqManager();
       
-      const { view } = await this.multiSynqManager.initialize(apiKey);
+      const { view } = await this.multiSynqManager.initialize();
       this.gameView = view;
       this.isMultiSynqEnabled = true;
 
@@ -313,7 +310,7 @@ export class GameScene extends Phaser.Scene {
         this.gameOver();
       });
 
-      console.log('MultiSynq anti-cheat enabled');
+      console.log('✅ MultiSynq anti-cheat protection enabled');
     } catch (error) {
       console.error('Failed to initialize MultiSynq, falling back to local mode:', error);
       this.isMultiSynqEnabled = false;

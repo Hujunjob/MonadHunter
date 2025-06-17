@@ -1,54 +1,74 @@
-# React + TypeScript + Vite
+# 🧛 MonadHunter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个基于 React + Phaser 的吸血鬼幸存者风格游戏，集成了 MultiSynq 反作弊保护系统。
 
-Currently, two official plugins are available:
+## 🎮 游戏特色
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **经典玩法**: 吸血鬼幸存者风格的生存游戏
+- **反作弊保护**: 集成 MultiSynq 服务端验证系统
+- **现代技术栈**: React + TypeScript + Phaser + Vite
 
-## Expanding the ESLint configuration
+## 🚀 快速开始
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### 1. 安装依赖
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. 配置反作弊保护（可选）
+```bash
+# 复制环境变量文件
+cp .env.example .env
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+# 编辑 .env 文件，填入 MultiSynq API Key
+# 获取免费 API Key: https://multisynq.io/coder
 ```
+
+### 3. 启动游戏
+```bash
+npm run dev
+```
+
+## 🛡️ 反作弊系统
+
+游戏会自动检测 MultiSynq API Key 配置：
+
+- **配置了 API Key**: 自动启用反作弊保护模式
+- **未配置 API Key**: 使用本地模式（适合开发调试）
+
+详细说明请查看 [MultiSynq 集成文档](./MULTISYNQ_INTEGRATION.md)
+
+## 🎯 游戏操作
+
+- **移动**: 方向键 ←↑↓→
+- **射击**: 空格键或回车键（自动瞄准最近敌人）
+- **重启**: 点击游戏内的重启按钮
+
+## 📦 构建部署
+
+```bash
+# 构建生产版本
+npm run build
+
+# 预览构建结果
+npm run preview
+```
+
+## 🔧 技术架构
+
+- **前端**: React 19 + TypeScript + Vite
+- **游戏引擎**: Phaser 3.90
+- **反作弊**: MultiSynq 客户端同步
+- **样式**: CSS3 + 现代设计
+
+## 📖 文档
+
+- [MultiSynq 反作弊集成说明](./MULTISYNQ_INTEGRATION.md)
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+MIT License

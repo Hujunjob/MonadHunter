@@ -10,9 +10,15 @@ export class MultiSynqManager {
   private gameView?: GameView;
   private isInitialized = false;
 
-  async initialize(apiKey: string, appId: string = 'com.monadhunter.game') {
+  async initialize(appId: string = 'com.monadhunter.game') {
     try {
       console.log('Initializing MultiSynq...');
+      
+      // Get API key from environment variables
+      const apiKey = this.getApiKeyFromEnv();
+      if (!apiKey) {
+        throw new Error('MultiSynq API key not found in environment variables');
+      }
       
       // Create session
       this.session = new Multisynq.Session(appId, apiKey);
@@ -61,26 +67,13 @@ export class MultiSynqManager {
     }
   }
 
-  // Helper method to get API key from environment or prompt user
-  static async getApiKey(): Promise<string> {
-    // First check if API key is stored in localStorage
-    const storedKey = localStorage.getItem('multisynq_api_key');
-    if (storedKey) {
-      return storedKey;
-    }
+  // Get API key from environment variables
+  private getApiKeyFromEnv(): string | null {
+    return import.meta.env.VITE_MULTISYNQ_API_KEY || null;
+  }
 
-    // Prompt user for API key
-    const apiKey = prompt(
-      'Please enter your MultiSynq API key.\n\n' +
-      'If you don\'t have one, visit https://multisynq.io/coder to sign up (free, no credit card required).'
-    );
-
-    if (!apiKey) {
-      throw new Error('MultiSynq API key is required');
-    }
-
-    // Store for future use
-    localStorage.setItem('multisynq_api_key', apiKey);
-    return apiKey;
+  // Check if MultiSynq is available (has API key)
+  static isAvailable(): boolean {
+    return !!(import.meta.env.VITE_MULTISYNQ_API_KEY);
   }
 }

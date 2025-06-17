@@ -20,8 +20,8 @@ function App() {
 
   return (
     <div className="App">
-      <h1>吸血鬼幸存者</h1>
-      <p>使用方向键移动，自动攻击最近的敌人</p>
+      <h1>🧛 MonadHunter</h1>
+      <p>使用方向键移动，空格键射击最近的敌人</p>
       <div id="game-container"></div>
     </div>
   );
