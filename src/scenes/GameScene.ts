@@ -26,6 +26,7 @@ export class GameScene extends Phaser.Scene {
   private maxEnemies: number = 20;
   private lastCleanupTime: number = 0;
   private gameStartTime!: number;
+  private isGameOver: boolean = false;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -62,11 +63,16 @@ export class GameScene extends Phaser.Scene {
       playerSpeed: 200
     };
     
+    // Reset game state flags
+    this.isGameOver = false;
+    
     // Adjust max enemies based on level for performance
     this.maxEnemies = Math.min(20 + this.gameStats.level * 2, 40);
     
-    // Record game start time
-    this.gameStartTime = this.time.now;
+    // Record game start time using real timestamp
+    this.gameStartTime = Date.now();
+    console.log("create time ",this.gameStartTime);
+    
     
     // Create player
     this.player = new Player(this, 500, 350, this.gameStats.playerSpeed);
@@ -115,10 +121,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   update() {
+    if (this.isGameOver) {
+      return;
+    }
+    
     this.player.update(this.cursors);
     
-    // Update game time
-    this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
+    // Update game time using real timestamp
+    this.gameStats.gameTime = Math.floor((Date.now() - this.gameStartTime) / 1000);
     
     // Handle shooting input with rate limiting
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
@@ -279,17 +289,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   private gameOver() {
+    // Set game over flag to stop timer and updates
+    this.isGameOver = true;
+    
     // Stop enemy spawning and physics updates instead of pausing the whole scene
     this.physics.pause();
     
     // Add game over text
-    this.add.text(400, 300, 'GAME OVER', {
+    this.add.text(500, 350, 'GAME OVER', {
       fontSize: '64px',
       color: '#ffffff'
     }).setOrigin(0.5);
     
     // Add restart instruction
-    this.add.text(400, 370, 'Click Back to Menu to play again', {
+    this.add.text(500, 420, 'Click Back to Menu to play again', {
       fontSize: '24px',
       color: '#cccccc'
     }).setOrigin(0.5);
