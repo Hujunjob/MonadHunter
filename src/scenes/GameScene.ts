@@ -2,13 +2,16 @@ import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import type { PlayerStats } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
+import { ShooterEnemy } from '../entities/ShooterEnemy';
 import { Bullet } from '../entities/Bullet';
+import { EnemyBullet } from '../entities/EnemyBullet';
 import { GameUI } from '../ui/GameUI';
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
   private enemies!: Phaser.Physics.Arcade.Group;
   private bullets!: Phaser.Physics.Arcade.Group;
+  private enemyBullets!: Phaser.Physics.Arcade.Group;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private gameUI!: GameUI;
   private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -57,6 +60,11 @@ export class GameScene extends Phaser.Scene {
       .fillStyle(0xffff00)
       .fillRect(0, 0, 8, 8)
       .generateTexture('bullet', 8, 8);
+      
+    this.add.graphics()
+      .fillStyle(0xff3300) // 改为鲜红色，更明显
+      .fillRect(0, 0, 8, 8) // 增大尺寸
+      .generateTexture('enemyBullet', 8, 8);
   }
 
   create() {
@@ -105,6 +113,11 @@ export class GameScene extends Phaser.Scene {
       runChildUpdate: true
     });
     
+    this.enemyBullets = this.physics.add.group({
+      classType: EnemyBullet,
+      runChildUpdate: true
+    });
+    
     // Create input
     this.cursors = this.input.keyboard?.createCursorKeys()!;
     this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)!;
@@ -119,10 +132,14 @@ export class GameScene extends Phaser.Scene {
     // Set up collisions
     this.physics.add.overlap(this.bullets, this.enemies, this.bulletHitEnemy, undefined, this);
     this.physics.add.overlap(this.player, this.enemies, this.playerHitEnemy, undefined, this);
+    this.physics.add.overlap(this.player, this.enemyBullets, this.playerHitByEnemyBullet, undefined, this);
+    
+    // 监听敌人射击事件
+    this.events.on('enemy-shoot', this.createEnemyBullet, this);
     
     // Start enemy spawning with dynamic rate
     this.time.addEvent({
-      delay: 800,
+      delay: 700,
       callback: this.spawnEnemy,
       callbackScope: this,
       loop: true
@@ -174,6 +191,13 @@ export class GameScene extends Phaser.Scene {
         b.destroy();
       }
     });
+    
+    this.enemyBullets.children.entries.forEach((bullet) => {
+      const b = bullet as Phaser.Physics.Arcade.Sprite;
+      if (b.x < -100 || b.x > 1100 || b.y < -100 || b.y > 800) {
+        b.destroy();
+      }
+    });
   }
 
   private spawnEnemy() {
@@ -207,7 +231,16 @@ export class GameScene extends Phaser.Scene {
         y = 0;
     }
     
-    const enemy = new Enemy(this, x, y, this.player, this.gameStats.level);
+    // 随机决定敌人类型，射击敌人出现概率随等级增加
+    const shooterChance = Math.min(0.3, 0.1 + (this.gameStats.level - 1) * 0.05); // 10%-30%
+    let enemy;
+    
+    if (Math.random() < shooterChance) {
+      enemy = new ShooterEnemy(this, x, y, this.player, this.gameStats.level);
+    } else {
+      enemy = new Enemy(this, x, y, this.player, this.gameStats.level);
+    }
+    
     this.enemies.add(enemy);
   }
   
@@ -300,12 +333,42 @@ export class GameScene extends Phaser.Scene {
   }
 
   private playerHitEnemy(_player: any, enemy: any) {
-    this.player.takeDamage(10);
+    this.player.takeDamage(enemy.damage || 10);
     enemy.destroy();
     
     if (this.player.isDead()) {
       this.gameOver();
     }
+  }
+
+  private playerHitByEnemyBullet(_player: any, enemyBullet: any) {
+    this.player.takeDamage(enemyBullet.damage || 15);
+    enemyBullet.destroy();
+    
+    if (this.player.isDead()) {
+      this.gameOver();
+    }
+  }
+
+  private createEnemyBullet(bulletData: any) {
+    // 直接通过group创建bullet，这样可以确保正确的physics设置
+    const enemyBullet = this.enemyBullets.create(bulletData.x, bulletData.y, 'enemyBullet') as EnemyBullet;
+    
+    // 设置bullet属性
+    enemyBullet.damage = 20; // 提高敌人子弹伤害
+    
+    // 设置速度
+    enemyBullet.setVelocity(
+      Math.cos(bulletData.angle) * bulletData.speed,
+      Math.sin(bulletData.angle) * bulletData.speed
+    );
+    
+    // 设置自动销毁
+    this.time.delayedCall(3000, () => {
+      if (enemyBullet.active) {
+        enemyBullet.destroy();
+      }
+    });
   }
 
   private levelUp() {
