@@ -18,8 +18,11 @@ export class GameScene extends Phaser.Scene {
     experience: 0,
     experienceToNext: 100,
     health: 100,
-    maxHealth: 100
+    maxHealth: 100,
+    killCount: 0,
+    gameTime: 0
   };
+  private gameStartTime!: number;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -44,6 +47,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    // Record game start time
+    this.gameStartTime = this.time.now;
+    
     // Create player
     this.player = new Player(this, 400, 300);
     
@@ -72,7 +78,7 @@ export class GameScene extends Phaser.Scene {
     
     // Start spawning enemies
     this.time.addEvent({
-      delay: 2000,
+      delay: 667,
       callback: this.spawnEnemy,
       callbackScope: this,
       loop: true
@@ -81,6 +87,9 @@ export class GameScene extends Phaser.Scene {
 
   update() {
     this.player.update(this.cursors);
+    
+    // Update game time
+    this.gameStats.gameTime = Math.floor((this.time.now - this.gameStartTime) / 1000);
     
     // Handle shooting input
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
@@ -117,7 +126,7 @@ export class GameScene extends Phaser.Scene {
         y = 0;
     }
     
-    const enemy = new Enemy(this, x, y, this.player);
+    const enemy = new Enemy(this, x, y, this.player, this.gameStats.level);
     this.enemies.add(enemy);
   }
 
@@ -161,6 +170,7 @@ export class GameScene extends Phaser.Scene {
     enemy.takeDamage(25);
     
     if (enemy.isDead()) {
+      this.gameStats.killCount++;
       this.gameStats.experience += 10;
       if (this.gameStats.experience >= this.gameStats.experienceToNext) {
         this.levelUp();

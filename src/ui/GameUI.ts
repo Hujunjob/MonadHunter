@@ -6,6 +6,8 @@ interface GameStats {
   experienceToNext: number;
   health: number;
   maxHealth: number;
+  killCount: number;
+  gameTime: number;
 }
 
 export class GameUI {
@@ -15,6 +17,8 @@ export class GameUI {
   private expBar!: Phaser.GameObjects.Graphics;
   private expBarBg!: Phaser.GameObjects.Graphics;
   private restartButton!: Phaser.GameObjects.Text;
+  private killCountText!: Phaser.GameObjects.Text;
+  private gameTimeText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
     this.scene = scene;
@@ -42,6 +46,18 @@ export class GameUI {
     // Experience bar
     this.expBar = this.scene.add.graphics();
 
+    // Kill count text
+    this.killCountText = this.scene.add.text(10, 100, `Kills: ${stats.killCount}`, {
+      fontSize: '18px',
+      color: '#ffff00'
+    });
+
+    // Game time text
+    this.gameTimeText = this.scene.add.text(10, 125, `Time: ${this.formatTime(stats.gameTime)}`, {
+      fontSize: '18px',
+      color: '#00ffff'
+    });
+
     // Restart button
     this.restartButton = this.scene.add.text(700, 10, 'Restart', {
       fontSize: '20px',
@@ -58,11 +74,19 @@ export class GameUI {
   update(stats: GameStats) {
     this.healthText.setText(`Health: ${stats.health}/${stats.maxHealth}`);
     this.levelText.setText(`Level: ${stats.level}`);
+    this.killCountText.setText(`Kills: ${stats.killCount}`);
+    this.gameTimeText.setText(`Time: ${this.formatTime(stats.gameTime)}`);
 
     // Update experience bar
     this.expBar.clear();
     this.expBar.fillStyle(0x00ff00);
     const expWidth = (stats.experience / stats.experienceToNext) * 200;
     this.expBar.fillRect(10, 70, expWidth, 20);
+  }
+
+  private formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 }

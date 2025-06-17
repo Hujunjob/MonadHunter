@@ -2,14 +2,20 @@ import Phaser from 'phaser';
 import { Player } from './Player';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
-  private speed = 50;
-  private health = 50;
+  private speed: number;
+  private health: number;
+  private maxHealth: number;
   private player: Player;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
+  constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1) {
     super(scene, x, y, 'enemy');
     
     this.player = player;
+    
+    // Scale stats based on level
+    this.speed = (80 + (level - 1) * 15) * 3; // Base 240, +45 per level (3x faster)
+    this.maxHealth = 50 + (level - 1) * 20; // Base 50, +20 per level
+    this.health = this.maxHealth;
     
     scene.add.existing(this);
     scene.physics.add.existing(this);
