@@ -29,6 +29,7 @@ export class GameUI {
   private killCountText!: Phaser.GameObjects.Text;
   private gameTimeText!: Phaser.GameObjects.Text;
   private walletStatus!: Phaser.GameObjects.Text;
+  private coinsIcon!: Phaser.GameObjects.Image;
   private coinsText!: Phaser.GameObjects.Text;
   private playerStatsText!: Phaser.GameObjects.Text;
 
@@ -93,8 +94,12 @@ export class GameUI {
     });
 
     // Coins display (below wallet status)
-    this.coinsText = this.scene.add.text(700, 75, `🪙 ${stats.coins}`, {
-      fontSize: '16px',
+    this.coinsIcon = this.scene.add.image(700, 82, 'gold');
+    this.coinsIcon.setScale(0.32);
+    this.coinsIcon.setOrigin(0, 0.5);
+    
+    this.coinsText = this.scene.add.text(742, 75, `${stats.coins}`, {
+      fontSize: '19px',
       color: '#fbbf24',
       fontStyle: 'bold'
     });
@@ -124,7 +129,7 @@ export class GameUI {
     this.levelText.setText(`Level: ${stats.level}`);
     this.killCountText.setText(`Kills: ${stats.killCount}`);
     this.gameTimeText.setText(`Time: ${this.formatTime(stats.gameTime)}`);
-    this.coinsText.setText(`🪙 ${stats.coins}`);
+    this.coinsText.setText(`${stats.coins}`);
 
     // Update experience bar
     this.expBar.clear();

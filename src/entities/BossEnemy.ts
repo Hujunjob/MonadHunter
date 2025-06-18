@@ -13,7 +13,7 @@ export class BossEnemy extends Enemy {
     super(scene, x, y, player, level, texture);
     
     // Boss属性大幅增强
-    this.health = 1000 + (level * 300); // 进一步提高血量
+    this.health = 2000 + (level * 1000); // 进一步提高血量
     this.maxHealth = this.health;
     this.damage = 50 + (level * 10); // 大幅提高攻击力
     this.speed = 60; // 提高移动速度

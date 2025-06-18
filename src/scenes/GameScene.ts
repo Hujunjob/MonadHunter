@@ -63,6 +63,9 @@ export class GameScene extends Phaser.Scene {
     this.load.image('monad1', '/monad1.png');
     this.load.image('monad2', '/monad2.png');
     this.load.image('monadbullet', '/monadbullet.png');
+    
+    // Load gold coin
+    this.load.image('gold', '/gold.png');
       
     this.add.graphics()
       .fillStyle(0xffff00)
@@ -367,6 +370,10 @@ export class GameScene extends Phaser.Scene {
       this.gameStats.killCount++;
       this.gameStats.coins++; // 击杀1获得金币1
       this.gameStats.experience += 10;
+      
+      // 显示金币弹出效果
+      this.showCoinPopup(enemy.x, enemy.y, 1);
+      
       if (this.gameStats.experience >= this.gameStats.experienceToNext) {
         this.levelUp();
       }
@@ -774,6 +781,9 @@ export class GameScene extends Phaser.Scene {
         this.gameStats.experience += 200; // 大量额外经验
         console.log(`Boss defeated! +100 coins, +200 exp`);
         
+        // 显示Boss金币弹出效果
+        this.showCoinPopup(this.currentBoss.x, this.currentBoss.y, 100);
+        
         // 确保Boss和血条被完全清理
         if (this.currentBoss.active) {
           this.currentBoss.destroy();
@@ -811,5 +821,41 @@ export class GameScene extends Phaser.Scene {
     }
     this.startEnemySpawning();
     console.log(`Level ${this.gameStats.level}: Enemy spawn delay = ${this.getEnemySpawnDelay()}ms`);
+  }
+
+  private showCoinPopup(x: number, y: number, amount: number) {
+    // 创建金币图标
+    const coinIcon = this.add.image(x, y, 'gold');
+    coinIcon.setScale(0.4); // 调整金币大小
+    
+    // 创建金币数量文本
+    const coinText = this.add.text(x + 25, y - 15, `+${amount}`, {
+      fontSize: '24px', // 增大字体
+      color: '#fbbf24',
+      fontStyle: 'bold',
+      stroke: '#000000', // 添加黑色描边
+      strokeThickness: 2 // 描边厚度
+    });
+    
+    // 金币弹出动画
+    this.tweens.add({
+      targets: [coinIcon, coinText],
+      y: y - 60, // 向上移动更多
+      alpha: { from: 1, to: 0 }, // 淡出
+      duration: 1200, // 稍微延长动画时间
+      ease: 'Power2',
+      onComplete: () => {
+        coinIcon.destroy();
+        coinText.destroy();
+      }
+    });
+    
+    // 金币图标单独的缩放动画
+    this.tweens.add({
+      targets: coinIcon,
+      scale: { from: 0.4, to: 0.6 }, // 金币放大效果
+      duration: 600,
+      ease: 'Back.easeOut'
+    });
   }
 }
