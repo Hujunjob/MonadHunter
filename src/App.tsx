@@ -26,6 +26,10 @@ function App() {
 
   const startGame = () => {
     if (!gameRef.current) {
+      // Clear any previous game over states
+      setIsScoreUploadOpen(false);
+      setGameStats(null);
+      
       gameRef.current = new Game();
       setAppState('playing');
     }
