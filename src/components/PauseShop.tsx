@@ -178,7 +178,7 @@ export const PauseShop: React.FC<PauseShopProps> = ({
           </div>
 
           <div className="shop-instructions">
-            <p>使用金币购买道具提升角色能力，道具价格会随购买次数递增50%</p>
+            <p>使用金币购买道具提升角色能力，道具价格会随购买次数翻倍</p>
             <p>按 P 键或点击关闭按钮继续游戏</p>
           </div>
         </div>

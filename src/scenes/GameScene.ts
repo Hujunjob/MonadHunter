@@ -49,6 +49,7 @@ export class GameScene extends Phaser.Scene {
   private itemPurchaseCounts: { [key: string]: number } = {};
   private currentBoss: BossEnemy | null = null;
   private bossDefeated: boolean = false;
+  private enemySpawnTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -149,12 +150,7 @@ export class GameScene extends Phaser.Scene {
     this.events.on('enemy-shoot', this.createEnemyBullet, this);
     
     // Start enemy spawning with dynamic rate
-    this.time.addEvent({
-      delay: 700,
-      callback: this.spawnEnemy,
-      callbackScope: this,
-      loop: true
-    });
+    this.startEnemySpawning();
     
     // Add cleanup timer
     this.time.addEvent({
@@ -440,9 +436,16 @@ export class GameScene extends Phaser.Scene {
     this.gameStats.maxHealth = this.player.stats.maxHealth;
     this.gameStats.health = this.player.stats.health;
     
+    // 更新敌人生成速度
+    this.updateEnemySpawnRate();
+    
     // 检查是否需要生成Boss（每5级）
-    if (this.gameStats.level % 5 === 0 && !this.currentBoss) {
-      this.spawnBoss();
+    if (this.gameStats.level % 5 === 0) {
+      // 重置Boss状态，允许生成新Boss
+      this.bossDefeated = false;
+      if (!this.currentBoss || this.currentBoss.isDead()) {
+        this.spawnBoss();
+      }
     }
     
     // Pause game and show upgrade options
@@ -681,9 +684,9 @@ export class GameScene extends Phaser.Scene {
     const basePrice = basePrices[itemId];
     if (!basePrice) return false;
 
-    // 计算当前价格（50%递增）
+    // 计算当前价格（100%递增）
     const purchaseCount = this.itemPurchaseCounts[itemId] || 0;
-    const currentPrice = Math.floor(basePrice * Math.pow(1.5, purchaseCount));
+    const currentPrice = Math.floor(basePrice * Math.pow(2, purchaseCount));
 
     // 检查是否有足够金币
     if (this.gameStats.coins < currentPrice) {
@@ -749,7 +752,7 @@ export class GameScene extends Phaser.Scene {
     if (!basePrice) return 0;
 
     const purchaseCount = this.itemPurchaseCounts[itemId] || 0;
-    return Math.floor(basePrice * Math.pow(1.5, purchaseCount));
+    return Math.floor(basePrice * Math.pow(2, purchaseCount));
   }
 
   private spawnBoss() {
@@ -766,12 +769,47 @@ export class GameScene extends Phaser.Scene {
     if (this.currentBoss && this.currentBoss.isDead()) {
       if (!this.bossDefeated) {
         this.bossDefeated = true;
-        // Boss被击败，给予额外奖励
-        this.gameStats.coins += 50; // Boss奖励50金币
-        this.gameStats.experience += 100; // 额外经验
-        console.log(`Boss defeated! +50 coins, +100 exp`);
+        // Boss被击败，给予大量奖励
+        this.gameStats.coins += 100; // Boss奖励100金币
+        this.gameStats.experience += 200; // 大量额外经验
+        console.log(`Boss defeated! +100 coins, +200 exp`);
+        
+        // 确保Boss和血条被完全清理
+        if (this.currentBoss.active) {
+          this.currentBoss.destroy();
+        }
         this.currentBoss = null;
       }
     }
+    
+    // 额外检查：如果currentBoss引用的对象已经不活跃，清理引用
+    if (this.currentBoss && !this.currentBoss.active) {
+      this.currentBoss = null;
+    }
+  }
+
+  private startEnemySpawning() {
+    const spawnDelay = this.getEnemySpawnDelay();
+    this.enemySpawnTimer = this.time.addEvent({
+      delay: spawnDelay,
+      callback: this.spawnEnemy,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  private getEnemySpawnDelay(): number {
+    // 基础延迟700ms，每级减少20ms，最低100ms
+    const baseDelay = 700;
+    const levelReduction = (this.gameStats.level - 1) * 20;
+    return Math.max(100, baseDelay - levelReduction);
+  }
+
+  private updateEnemySpawnRate() {
+    if (this.enemySpawnTimer) {
+      this.enemySpawnTimer.destroy();
+    }
+    this.startEnemySpawning();
+    console.log(`Level ${this.gameStats.level}: Enemy spawn delay = ${this.getEnemySpawnDelay()}ms`);
   }
 }

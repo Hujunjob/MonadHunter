@@ -5,19 +5,19 @@ import { HealthBar } from '../components/HealthBar';
 
 export class BossEnemy extends Enemy {
   private shootTimer: number = 0;
-  private shootCooldown: number = 2000; // 2秒射击间隔
+  private shootCooldown: number = 1000; // 1秒射击间隔（更频繁）
   private circularBurstTimer: number = 0;
-  private circularBurstCooldown: number = 5000; // 5秒环形弹幕间隔
+  private circularBurstCooldown: number = 3000; // 3秒环形弹幕间隔（更频繁）
   private healthBar: HealthBar;
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number, texture: string) {
     super(scene, x, y, player, level, texture);
     
-    // Boss属性增强
-    this.health = 200 + (level * 50); // 更高血量
+    // Boss属性大幅增强
+    this.health = 1000 + (level * 300); // 进一步提高血量
     this.maxHealth = this.health;
-    this.damage = 30 + (level * 5); // 更高攻击力
-    this.speed = 40; // 稍慢但更强
+    this.damage = 50 + (level * 10); // 大幅提高攻击力
+    this.speed = 60; // 提高移动速度
     
     // 设置更大尺寸（2倍）
     this.setScale(2);
@@ -47,9 +47,9 @@ export class BossEnemy extends Enemy {
         this.shootAtPlayer();
       }
       
-      // 10%概率发射环形弹幕
+      // 25%概率发射环形弹幕（提高概率）
       if (currentTime - this.circularBurstTimer > this.circularBurstCooldown) {
-        if (Math.random() < 0.1) { // 10%概率
+        if (Math.random() < 0.25) { // 25%概率
           this.circularBurstTimer = currentTime;
           this.fireCircularBurst();
         }
@@ -62,14 +62,14 @@ export class BossEnemy extends Enemy {
     
     const angle = Phaser.Math.Angle.Between(this.x, this.y, this.player.x, this.player.y);
     
-    // Boss发射3发子弹，呈扇形
-    for (let i = -1; i <= 1; i++) {
-      const spreadAngle = angle + (i * 0.2); // 扇形散布
+    // Boss发射5发子弹，呈扇形
+    for (let i = -2; i <= 2; i++) {
+      const spreadAngle = angle + (i * 0.15); // 更密集的扇形散布
       this.scene.events.emit('enemy-shoot', {
         x: this.x,
         y: this.y,
         angle: spreadAngle,
-        speed: 200
+        speed: 250 // 更快的子弹速度
       });
     }
   }
@@ -77,7 +77,7 @@ export class BossEnemy extends Enemy {
   private fireCircularBurst() {
     if (!this.active) return;
     
-    const bulletCount = 16; // 环形弹幕数量
+    const bulletCount = 24; // 增加环形弹幕数量
     const angleStep = (Math.PI * 2) / bulletCount;
     
     for (let i = 0; i < bulletCount; i++) {
@@ -86,7 +86,7 @@ export class BossEnemy extends Enemy {
         x: this.x,
         y: this.y,
         angle: angle,
-        speed: 150
+        speed: 180 // 提高环形弹幕速度
       });
     }
   }
@@ -111,6 +111,7 @@ export class BossEnemy extends Enemy {
   destroy(fromScene?: boolean): void {
     if (this.healthBar) {
       this.healthBar.destroy();
+      this.healthBar = null as any;
     }
     super.destroy(fromScene);
   }
