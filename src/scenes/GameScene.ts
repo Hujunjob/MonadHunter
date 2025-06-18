@@ -30,7 +30,8 @@ export class GameScene extends Phaser.Scene {
       bulletCount: 1,
       defense: 0,
       maxHealth: 100,
-      health: 100
+      health: 100,
+      attack: 25
     } as PlayerStats
   };
   private maxEnemies: number = 20;
@@ -80,7 +81,8 @@ export class GameScene extends Phaser.Scene {
         bulletCount: 1,
         defense: 0,
         maxHealth: 100,
-        health: 100
+        health: 100,
+        attack: 25
       }
     };
     
@@ -336,7 +338,7 @@ export class GameScene extends Phaser.Scene {
 
   private bulletHitEnemy(bullet: any, enemy: any) {
     bullet.destroy();
-    enemy.takeDamage(25);
+    enemy.takeDamage(this.player.stats.attack);
     
     if (enemy.isDead()) {
       this.gameStats.killCount++;
@@ -459,6 +461,18 @@ export class GameScene extends Phaser.Scene {
         effect: () => {
           // 升级环形弹幕等级
           this.circleBurstLevel++;
+          // 立即触发一次环形弹幕让玩家体验
+          this.fireCircleBurst();
+        }
+      },
+      {
+        id: 'attack',
+        title: '增加攻击力',
+        description: '子弹造成更多伤害',
+        icon: '⚔️',
+        effect: () => {
+          this.player.updateStats({ attack: this.player.stats.attack + 10 });
+          this.gameStats.playerStats.attack = this.player.stats.attack;
         }
       }
     ];

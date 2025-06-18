@@ -125,6 +125,7 @@ export class GameUI {
     // Update player stats display
     const statsLines = [
       `🔫 子弹数量: ${stats.playerStats.bulletCount}`,
+      `⚔️ 攻击力: ${stats.playerStats.attack}`,
       `⚡ 移动速度: ${stats.playerStats.speed}`,
       `🛡️ 防御力: ${stats.playerStats.defense}`
     ];

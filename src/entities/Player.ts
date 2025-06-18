@@ -7,6 +7,7 @@ export interface PlayerStats {
   defense: number;
   maxHealth: number;
   health: number;
+  attack: number;
 }
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -24,6 +25,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       defense: 0,
       maxHealth: 100,
       health: 100,
+      attack: 25,
       ...initialStats
     };
     
