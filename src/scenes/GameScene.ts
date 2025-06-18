@@ -16,6 +16,7 @@ export class GameScene extends Phaser.Scene {
   private gameUI!: GameUI;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private enterKey!: Phaser.Input.Keyboard.Key;
+  private pKey!: Phaser.Input.Keyboard.Key;
   
   private gameStats = {
     level: 1,
@@ -41,6 +42,8 @@ export class GameScene extends Phaser.Scene {
   private isUpgradeModalOpen: boolean = false;
   private pendingUpgradeOptions: any[] = [];
   private circleBurstLevel: number = 0;
+  private isPaused: boolean = false;
+  private lastPauseToggleTime: number = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -123,6 +126,7 @@ export class GameScene extends Phaser.Scene {
     this.cursors = this.input.keyboard?.createCursorKeys()!;
     this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)!;
     this.enterKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)!;
+    this.pKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.P)!;
     
     // Create UI
     this.gameUI = new GameUI(this, this.gameStats);
@@ -156,7 +160,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isGameOver || this.isUpgradeModalOpen) {
+    // Handle pause key with debounce
+    if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
+      const currentTime = Date.now();
+      if (currentTime - this.lastPauseToggleTime > 500) { // 500ms debounce
+        this.lastPauseToggleTime = currentTime;
+        this.togglePause();
+      }
+    }
+
+    if (this.isGameOver || this.isUpgradeModalOpen || this.isPaused) {
       return;
     }
     
@@ -587,5 +600,110 @@ export class GameScene extends Phaser.Scene {
         Math.sin(angle) * speed
       );
     }
+  }
+
+  private togglePause() {
+    if (this.isGameOver || this.isUpgradeModalOpen) {
+      return; // 游戏结束或升级界面时不能暂停
+    }
+
+    this.isPaused = !this.isPaused;
+    
+    if (this.isPaused) {
+      // 暂停游戏物理和定时器
+      this.physics.pause();
+      this.time.paused = true;
+      
+      // 显示商店界面
+      const showPauseShopCallback = (window as any).__SHOW_PAUSE_SHOP_CALLBACK__;
+      if (showPauseShopCallback) {
+        showPauseShopCallback(this.gameStats.killCount);
+      }
+    } else {
+      // 恢复游戏物理和定时器
+      this.physics.resume();
+      this.time.paused = false;
+    }
+  }
+
+  public resumeFromShop() {
+    // 恢复游戏（从商店界面调用）
+    this.isPaused = false;
+    this.physics.resume();
+    this.time.paused = false;
+    // 更新最后暂停时间，防止立即再次暂停
+    this.lastPauseToggleTime = Date.now();
+  }
+
+  public purchaseShopItem(itemId: string) {
+    // 商店道具效果
+    switch (itemId) {
+      case 'health-potion':
+        if (this.gameStats.killCount >= 10) {
+          const healAmount = Math.floor(this.player.stats.maxHealth * 0.5);
+          this.player.heal(healAmount);
+          this.gameStats.health = this.player.stats.health;
+          this.gameStats.killCount -= 10;
+          return true;
+        }
+        break;
+      case 'speed-boost':
+        if (this.gameStats.killCount >= 15) {
+          this.player.updateStats({ speed: this.player.stats.speed + 30 });
+          this.gameStats.playerStats.speed = this.player.stats.speed;
+          this.gameStats.killCount -= 15;
+          return true;
+        }
+        break;
+      case 'damage-boost':
+        if (this.gameStats.killCount >= 20) {
+          this.player.updateStats({ attack: this.player.stats.attack + 10 });
+          this.gameStats.playerStats.attack = this.player.stats.attack;
+          this.gameStats.killCount -= 20;
+          return true;
+        }
+        break;
+      case 'bullet-boost':
+        if (this.gameStats.killCount >= 25) {
+          this.player.updateStats({ bulletCount: this.player.stats.bulletCount + 1 });
+          this.gameStats.playerStats.bulletCount = this.player.stats.bulletCount;
+          this.gameStats.killCount -= 25;
+          return true;
+        }
+        break;
+      case 'defense-boost':
+        if (this.gameStats.killCount >= 18) {
+          this.player.updateStats({ defense: this.player.stats.defense + 2 });
+          this.gameStats.playerStats.defense = this.player.stats.defense;
+          this.gameStats.killCount -= 18;
+          return true;
+        }
+        break;
+      case 'max-health-boost':
+        if (this.gameStats.killCount >= 22) {
+          this.player.updateStats({ maxHealth: this.player.stats.maxHealth + 20 });
+          this.gameStats.maxHealth = this.player.stats.maxHealth;
+          this.gameStats.playerStats.maxHealth = this.player.stats.maxHealth;
+          this.gameStats.killCount -= 22;
+          return true;
+        }
+        break;
+      case 'circle-burst':
+        if (this.gameStats.killCount >= 30) {
+          this.circleBurstLevel++;
+          this.gameStats.killCount -= 30;
+          return true;
+        }
+        break;
+      case 'full-heal':
+        if (this.gameStats.killCount >= 25) {
+          this.player.updateStats({ health: this.player.stats.maxHealth });
+          this.gameStats.health = this.player.stats.health;
+          this.gameStats.killCount -= 25;
+          return true;
+        }
+        break;
+    }
+    return false;
   }
 }

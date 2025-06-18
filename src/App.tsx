@@ -8,6 +8,7 @@ import { ScoreUpload } from './components/ScoreUpload';
 import { PlayerStats } from './components/PlayerStats';
 import { NetworkIndicator } from './components/NetworkIndicator';
 import { Leaderboard } from './components/Leaderboard';
+import { PauseShop } from './components/PauseShop';
 import type { UpgradeOption } from './components/UpgradeModal';
 import './App.css';
 
@@ -23,6 +24,8 @@ function App() {
   const [isScoreUploadOpen, setIsScoreUploadOpen] = useState(false);
   const [gameStats, setGameStats] = useState<{level: number; killCount: number; gameTime: number} | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  const [isPauseShopOpen, setIsPauseShopOpen] = useState(false);
+  const [currentKillCount, setCurrentKillCount] = useState(0);
 
   const startGame = () => {
     if (!gameRef.current) {
@@ -92,6 +95,38 @@ function App() {
     setIsLeaderboardOpen(false);
   };
 
+  const showPauseShop = (killCount: number) => {
+    setCurrentKillCount(killCount);
+    setIsPauseShopOpen(true);
+  };
+
+  const hidePauseShop = () => {
+    setIsPauseShopOpen(false);
+    // Resume game
+    if (gameRef.current && gameRef.current.scene.isActive('GameScene')) {
+      const gameScene = gameRef.current.scene.getScene('GameScene') as any;
+      if (gameScene && gameScene.resumeFromShop) {
+        gameScene.resumeFromShop();
+      }
+    }
+  };
+
+  const handlePurchase = (itemId: string): boolean => {
+    // Call the game scene's purchase method
+    if (gameRef.current && gameRef.current.scene.isActive('GameScene')) {
+      const gameScene = gameRef.current.scene.getScene('GameScene') as any;
+      if (gameScene && gameScene.purchaseShopItem) {
+        const success = gameScene.purchaseShopItem(itemId);
+        if (success) {
+          // Update kill count display
+          setCurrentKillCount(gameScene.gameStats.killCount);
+        }
+        return success;
+      }
+    }
+    return false;
+  };
+
   // Update app state based on wallet connection
   React.useEffect(() => {
     if (isConnected && appState === 'wallet') {
@@ -123,10 +158,12 @@ function App() {
     (window as any).__GAME_RESET_CALLBACK__ = resetGame;
     (window as any).__SHOW_UPGRADE_CALLBACK__ = showUpgradeModal;
     (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__ = showScoreUpload;
+    (window as any).__SHOW_PAUSE_SHOP_CALLBACK__ = showPauseShop;
     return () => {
       delete (window as any).__GAME_RESET_CALLBACK__;
       delete (window as any).__SHOW_UPGRADE_CALLBACK__;
       delete (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
+      delete (window as any).__SHOW_PAUSE_SHOP_CALLBACK__;
     };
   }, []);
 
@@ -141,6 +178,7 @@ function App() {
           {isConnected && appState !== 'playing' && <NetworkIndicator />}
         </div>
         <p>使用方向键移动，空格键射击最近的敌人</p>
+        {appState === 'playing' && <p>按P暂停，购买道具提升能力</p>}
       </header>
 
       {/* Wallet Connection Phase */}
@@ -201,6 +239,14 @@ function App() {
           onClose={hideLeaderboard}
         />
       )}
+
+      {/* Pause Shop Modal */}
+      <PauseShop
+        isOpen={isPauseShopOpen}
+        killCount={currentKillCount}
+        onPurchase={handlePurchase}
+        onClose={hidePauseShop}
+      />
     </div>
   );
 }
