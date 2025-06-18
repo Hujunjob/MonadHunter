@@ -523,18 +523,20 @@ export class GameScene extends Phaser.Scene {
       // Stop enemy spawning and physics updates instead of pausing the whole scene
       this.physics.pause();
       
-      // Show score upload modal via global callback
-      const showScoreUploadCallback = (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
-      if (showScoreUploadCallback) {
-        showScoreUploadCallback({
-          level: this.gameStats.level,
-          killCount: this.gameStats.killCount,
-          gameTime: this.gameStats.gameTime
-        });
-      } else {
-        // Fallback to old game over display
-        this.showGameOverScreen();
-      }
+      // Always show game over screen in game first
+      this.showGameOverScreen();
+      
+      // Then show score upload modal via global callback after a delay
+      this.time.delayedCall(2000, () => {
+        const showScoreUploadCallback = (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
+        if (showScoreUploadCallback) {
+          showScoreUploadCallback({
+            level: this.gameStats.level,
+            killCount: this.gameStats.killCount,
+            gameTime: this.gameStats.gameTime
+          });
+        }
+      });
     });
   }
 

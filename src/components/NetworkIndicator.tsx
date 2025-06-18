@@ -37,7 +37,7 @@ export const NetworkIndicator: React.FC = () => {
   
   if (!currentChain) {
     return (
-      <div className="flex items-center space-x-2 text-sm text-gray-500">
+      <div className="network-indicator unknown">
         <span>❓</span>
         <span>Unknown Network</span>
       </div>
@@ -45,11 +45,11 @@ export const NetworkIndicator: React.FC = () => {
   }
   
   return (
-    <div className="flex items-center space-x-2 text-sm">
-      <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-white ${getNetworkColor(chainId)}`}>
+    <div className="network-indicator">
+      <div className={`network-badge ${getNetworkColor(chainId).replace('bg-', '')}`}>
         <span>{getNetworkEmoji(chainId)}</span>
-        <span className="font-medium">{currentChain.name}</span>
-        {currentChain.testnet && <span className="text-xs opacity-80">(Testnet)</span>}
+        <span className="network-name">{currentChain.name}</span>
+        {currentChain.testnet && <span className="testnet-label">(Testnet)</span>}
       </div>
     </div>
   );

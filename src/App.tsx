@@ -124,7 +124,7 @@ function App() {
             <img src="/horseicon.png" alt="MonadHunter" className="game-logo" />
             MonadHunter
           </h1>
-          {isConnected && <NetworkIndicator />}
+          {isConnected && appState !== 'playing' && <NetworkIndicator />}
         </div>
         <p>使用方向键移动，空格键射击最近的敌人</p>
       </header>
@@ -140,10 +140,6 @@ function App() {
           <GameModeSelection 
             onStartGame={startGame}
           />
-          {/* Show player's blockchain stats */}
-          <div className="mt-6 max-w-md mx-auto">
-            <PlayerStats />
-          </div>
         </div>
       )}
 
@@ -158,7 +154,12 @@ function App() {
               Back to Menu
             </button>
           </div>
-          <div id="game-container"></div>
+          <div className="game-layout">
+            <div className="game-stats-sidebar">
+              <PlayerStats />
+            </div>
+            <div id="game-container"></div>
+          </div>
         </div>
       )}
 
