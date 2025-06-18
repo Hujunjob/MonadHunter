@@ -66,11 +66,11 @@ export const AddMonadNetwork: React.FC = () => {
     }
   };
 
-  const switchToMonad = () => {
-    if (switchChain) {
-      switchChain({ chainId: 10143 });
-    }
-  };
+  // const switchToMonad = () => {
+  //   if (switchChain) {
+  //     switchChain({ chainId: 10143 });
+  //   }
+  // };
 
   // Auto-switch to Monad when component mounts
   useEffect(() => {
