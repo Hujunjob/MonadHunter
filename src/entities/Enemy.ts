@@ -30,7 +30,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   update() {
-    if (this.player && this.active) {
+    // Check if game is paused (physics paused means game is paused)
+    if (!this.scene.physics.world.isPaused && this.player && this.active) {
       // Move towards player
       const angle = Phaser.Math.Angle.Between(this.x, this.y, this.player.x, this.player.y);
       this.setVelocity(
@@ -41,6 +42,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       // Update health bar position and health
       this.healthBar.updatePosition(this.x, this.y - 30);
       this.healthBar.setHealth(this.health, this.maxHealth);
+    } else if (this.scene.physics.world.isPaused) {
+      // Stop movement when paused
+      this.setVelocity(0, 0);
     }
   }
 

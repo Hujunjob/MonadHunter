@@ -1350,6 +1350,12 @@
   font-weight: 600;
 }
 
+.purchase-count {
+  font-size: 0.8rem;
+  color: #fbbf24;
+  font-weight: normal;
+}
+
 .item-description {
   font-size: 0.9rem;
   margin: 0 0 0.5rem 0;

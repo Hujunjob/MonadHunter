@@ -15,7 +15,8 @@ export class ShooterEnemy extends Enemy {
   update() {
     super.update();
     
-    if (this.player && this.active) {
+    // Only shoot if game is not paused
+    if (!this.scene.physics.world.isPaused && this.player && this.active) {
       const distance = Phaser.Math.Distance.Between(this.x, this.y, this.player.x, this.player.y);
       
       // 在射击范围内且冷却时间已过

@@ -25,7 +25,8 @@ function App() {
   const [gameStats, setGameStats] = useState<{level: number; killCount: number; gameTime: number} | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isPauseShopOpen, setIsPauseShopOpen] = useState(false);
-  const [currentKillCount, setCurrentKillCount] = useState(0);
+  const [currentCoins, setCurrentCoins] = useState(0);
+  const [purchaseCounts, setPurchaseCounts] = useState<{ [key: string]: number }>({});
 
   const startGame = () => {
     if (!gameRef.current) {
@@ -95,8 +96,9 @@ function App() {
     setIsLeaderboardOpen(false);
   };
 
-  const showPauseShop = (killCount: number) => {
-    setCurrentKillCount(killCount);
+  const showPauseShop = (coins: number, itemPurchaseCounts: { [key: string]: number }) => {
+    setCurrentCoins(coins);
+    setPurchaseCounts(itemPurchaseCounts);
     setIsPauseShopOpen(true);
   };
 
@@ -118,13 +120,24 @@ function App() {
       if (gameScene && gameScene.purchaseShopItem) {
         const success = gameScene.purchaseShopItem(itemId);
         if (success) {
-          // Update kill count display
-          setCurrentKillCount(gameScene.gameStats.killCount);
+          // Update coins and purchase counts display
+          setCurrentCoins(gameScene.gameStats.coins);
+          setPurchaseCounts({...gameScene.itemPurchaseCounts});
         }
         return success;
       }
     }
     return false;
+  };
+
+  const getItemPrice = (itemId: string): number => {
+    if (gameRef.current && gameRef.current.scene.isActive('GameScene')) {
+      const gameScene = gameRef.current.scene.getScene('GameScene') as any;
+      if (gameScene && gameScene.getItemPrice) {
+        return gameScene.getItemPrice(itemId);
+      }
+    }
+    return 0;
   };
 
   // Update app state based on wallet connection
@@ -243,9 +256,11 @@ function App() {
       {/* Pause Shop Modal */}
       <PauseShop
         isOpen={isPauseShopOpen}
-        killCount={currentKillCount}
+        coins={currentCoins}
+        purchaseCounts={purchaseCounts}
         onPurchase={handlePurchase}
         onClose={hidePauseShop}
+        onGetItemPrice={getItemPrice}
       />
     </div>
   );

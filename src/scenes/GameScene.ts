@@ -3,6 +3,7 @@ import { Player } from '../entities/Player';
 import type { PlayerStats } from '../entities/Player';
 import { Enemy } from '../entities/Enemy';
 import { ShooterEnemy } from '../entities/ShooterEnemy';
+import { BossEnemy } from '../entities/BossEnemy';
 import { Bullet } from '../entities/Bullet';
 import { EnemyBullet } from '../entities/EnemyBullet';
 import { GameUI } from '../ui/GameUI';
@@ -25,6 +26,7 @@ export class GameScene extends Phaser.Scene {
     health: 100,
     maxHealth: 100,
     killCount: 0,
+    coins: 0,
     gameTime: 0,
     playerStats: {
       speed: 200,
@@ -44,6 +46,9 @@ export class GameScene extends Phaser.Scene {
   private circleBurstLevel: number = 0;
   private isPaused: boolean = false;
   private lastPauseToggleTime: number = 0;
+  private itemPurchaseCounts: { [key: string]: number } = {};
+  private currentBoss: BossEnemy | null = null;
+  private bossDefeated: boolean = false;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -78,6 +83,7 @@ export class GameScene extends Phaser.Scene {
       health: 100,
       maxHealth: 100,
       killCount: 0,
+      coins: 0,
       gameTime: 0,
       playerStats: {
         speed: 200,
@@ -192,6 +198,9 @@ export class GameScene extends Phaser.Scene {
       this.lastCleanupTime = this.time.now;
       this.quickCleanup();
     }
+    
+    // Check boss status
+    this.checkBossStatus();
     
     // Update UI
     this.gameUI.update({
@@ -350,11 +359,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private bulletHitEnemy(bullet: any, enemy: any) {
+    // Don't process collisions when game is paused
+    if (this.isPaused || this.isUpgradeModalOpen) {
+      return;
+    }
+    
     bullet.destroy();
     enemy.takeDamage(this.player.stats.attack);
     
     if (enemy.isDead()) {
       this.gameStats.killCount++;
+      this.gameStats.coins++; // 击杀1获得金币1
       this.gameStats.experience += 10;
       if (this.gameStats.experience >= this.gameStats.experienceToNext) {
         this.levelUp();
@@ -363,6 +378,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private playerHitEnemy(_player: any, enemy: any) {
+    // Don't process collisions when game is paused
+    if (this.isPaused || this.isUpgradeModalOpen) {
+      return;
+    }
+    
     this.player.takeDamage(enemy.damage || 10);
     enemy.destroy();
     
@@ -372,6 +392,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private playerHitByEnemyBullet(_player: any, enemyBullet: any) {
+    // Don't process collisions when game is paused
+    if (this.isPaused || this.isUpgradeModalOpen) {
+      return;
+    }
+    
     this.player.takeDamage(enemyBullet.damage || 15);
     enemyBullet.destroy();
     
@@ -414,6 +439,11 @@ export class GameScene extends Phaser.Scene {
     this.player.heal(healthIncrease); // 升级时恢复新增的血量
     this.gameStats.maxHealth = this.player.stats.maxHealth;
     this.gameStats.health = this.player.stats.health;
+    
+    // 检查是否需要生成Boss（每5级）
+    if (this.gameStats.level % 5 === 0 && !this.currentBoss) {
+      this.spawnBoss();
+    }
     
     // Pause game and show upgrade options
     this.isUpgradeModalOpen = true;
@@ -617,7 +647,7 @@ export class GameScene extends Phaser.Scene {
       // 显示商店界面
       const showPauseShopCallback = (window as any).__SHOW_PAUSE_SHOP_CALLBACK__;
       if (showPauseShopCallback) {
-        showPauseShopCallback(this.gameStats.killCount);
+        showPauseShopCallback(this.gameStats.coins, this.itemPurchaseCounts);
       }
     } else {
       // 恢复游戏物理和定时器
@@ -635,75 +665,113 @@ export class GameScene extends Phaser.Scene {
     this.lastPauseToggleTime = Date.now();
   }
 
-  public purchaseShopItem(itemId: string) {
-    // 商店道具效果
+  public purchaseShopItem(itemId: string): boolean {
+    // 基础价格
+    const basePrices: { [key: string]: number } = {
+      'health-potion': 10,
+      'speed-boost': 15,
+      'damage-boost': 20,
+      'bullet-boost': 25,
+      'defense-boost': 18,
+      'max-health-boost': 22,
+      'circle-burst': 30,
+      'full-heal': 25
+    };
+
+    const basePrice = basePrices[itemId];
+    if (!basePrice) return false;
+
+    // 计算当前价格（50%递增）
+    const purchaseCount = this.itemPurchaseCounts[itemId] || 0;
+    const currentPrice = Math.floor(basePrice * Math.pow(1.5, purchaseCount));
+
+    // 检查是否有足够金币
+    if (this.gameStats.coins < currentPrice) {
+      return false;
+    }
+
+    // 扣除金币并记录购买
+    this.gameStats.coins -= currentPrice;
+    this.itemPurchaseCounts[itemId] = purchaseCount + 1;
+
+    // 应用道具效果
     switch (itemId) {
       case 'health-potion':
-        if (this.gameStats.killCount >= 10) {
-          const healAmount = Math.floor(this.player.stats.maxHealth * 0.5);
-          this.player.heal(healAmount);
-          this.gameStats.health = this.player.stats.health;
-          this.gameStats.killCount -= 10;
-          return true;
-        }
-        break;
+        const healAmount = Math.floor(this.player.stats.maxHealth * 0.5);
+        this.player.heal(healAmount);
+        this.gameStats.health = this.player.stats.health;
+        return true;
       case 'speed-boost':
-        if (this.gameStats.killCount >= 15) {
-          this.player.updateStats({ speed: this.player.stats.speed + 30 });
-          this.gameStats.playerStats.speed = this.player.stats.speed;
-          this.gameStats.killCount -= 15;
-          return true;
-        }
-        break;
+        this.player.updateStats({ speed: this.player.stats.speed + 30 });
+        this.gameStats.playerStats.speed = this.player.stats.speed;
+        return true;
       case 'damage-boost':
-        if (this.gameStats.killCount >= 20) {
-          this.player.updateStats({ attack: this.player.stats.attack + 10 });
-          this.gameStats.playerStats.attack = this.player.stats.attack;
-          this.gameStats.killCount -= 20;
-          return true;
-        }
-        break;
+        this.player.updateStats({ attack: this.player.stats.attack + 10 });
+        this.gameStats.playerStats.attack = this.player.stats.attack;
+        return true;
       case 'bullet-boost':
-        if (this.gameStats.killCount >= 25) {
-          this.player.updateStats({ bulletCount: this.player.stats.bulletCount + 1 });
-          this.gameStats.playerStats.bulletCount = this.player.stats.bulletCount;
-          this.gameStats.killCount -= 25;
-          return true;
-        }
-        break;
+        this.player.updateStats({ bulletCount: this.player.stats.bulletCount + 1 });
+        this.gameStats.playerStats.bulletCount = this.player.stats.bulletCount;
+        return true;
       case 'defense-boost':
-        if (this.gameStats.killCount >= 18) {
-          this.player.updateStats({ defense: this.player.stats.defense + 2 });
-          this.gameStats.playerStats.defense = this.player.stats.defense;
-          this.gameStats.killCount -= 18;
-          return true;
-        }
-        break;
+        this.player.updateStats({ defense: this.player.stats.defense + 2 });
+        this.gameStats.playerStats.defense = this.player.stats.defense;
+        return true;
       case 'max-health-boost':
-        if (this.gameStats.killCount >= 22) {
-          this.player.updateStats({ maxHealth: this.player.stats.maxHealth + 20 });
-          this.gameStats.maxHealth = this.player.stats.maxHealth;
-          this.gameStats.playerStats.maxHealth = this.player.stats.maxHealth;
-          this.gameStats.killCount -= 22;
-          return true;
-        }
-        break;
+        this.player.updateStats({ maxHealth: this.player.stats.maxHealth + 20 });
+        this.gameStats.maxHealth = this.player.stats.maxHealth;
+        this.gameStats.playerStats.maxHealth = this.player.stats.maxHealth;
+        return true;
       case 'circle-burst':
-        if (this.gameStats.killCount >= 30) {
-          this.circleBurstLevel++;
-          this.gameStats.killCount -= 30;
-          return true;
-        }
-        break;
+        this.circleBurstLevel++;
+        return true;
       case 'full-heal':
-        if (this.gameStats.killCount >= 25) {
-          this.player.updateStats({ health: this.player.stats.maxHealth });
-          this.gameStats.health = this.player.stats.health;
-          this.gameStats.killCount -= 25;
-          return true;
-        }
-        break;
+        this.player.updateStats({ health: this.player.stats.maxHealth });
+        this.gameStats.health = this.player.stats.health;
+        return true;
     }
     return false;
+  }
+
+  public getItemPrice(itemId: string): number {
+    const basePrices: { [key: string]: number } = {
+      'health-potion': 10,
+      'speed-boost': 15,
+      'damage-boost': 20,
+      'bullet-boost': 25,
+      'defense-boost': 18,
+      'max-health-boost': 22,
+      'circle-burst': 30,
+      'full-heal': 25
+    };
+
+    const basePrice = basePrices[itemId];
+    if (!basePrice) return 0;
+
+    const purchaseCount = this.itemPurchaseCounts[itemId] || 0;
+    return Math.floor(basePrice * Math.pow(1.5, purchaseCount));
+  }
+
+  private spawnBoss() {
+    // 在屏幕中央生成Boss
+    const boss = new BossEnemy(this, 500, 350, this.player, this.gameStats.level, 'monad1');
+    this.enemies.add(boss);
+    this.currentBoss = boss;
+    this.bossDefeated = false;
+    
+    console.log(`Level ${this.gameStats.level} Boss spawned!`);
+  }
+
+  private checkBossStatus() {
+    if (this.currentBoss && this.currentBoss.isDead()) {
+      if (!this.bossDefeated) {
+        this.bossDefeated = true;
+        // Boss被击败，给予额外奖励
+        this.gameStats.coins += 50; // Boss奖励50金币
+        this.gameStats.experience += 100; // 额外经验
+        console.log(`Boss defeated! +50 coins, +100 exp`);
+        this.currentBoss = null;
+      }
+    }
   }
 }

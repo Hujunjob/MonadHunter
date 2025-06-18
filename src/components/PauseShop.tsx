@@ -10,16 +10,20 @@ interface ShopItem {
 
 interface PauseShopProps {
   isOpen: boolean;
-  killCount: number;
+  coins: number;
+  purchaseCounts: { [key: string]: number };
   onPurchase: (itemId: string) => boolean;
   onClose: () => void;
+  onGetItemPrice: (itemId: string) => number;
 }
 
 export const PauseShop: React.FC<PauseShopProps> = ({
   isOpen,
-  killCount,
+  coins,
+  purchaseCounts,
   onPurchase,
-  onClose
+  onClose,
+  onGetItemPrice
 }) => {
   const [purchaseMessage, setPurchaseMessage] = useState<string>('');
 
@@ -89,7 +93,7 @@ export const PauseShop: React.FC<PauseShopProps> = ({
       setPurchaseMessage(`✅ 购买成功: ${item?.name}`);
       setTimeout(() => setPurchaseMessage(''), 2000);
     } else {
-      setPurchaseMessage('❌ 击杀数量不足');
+      setPurchaseMessage('❌ 金币不足');
       setTimeout(() => setPurchaseMessage(''), 2000);
     }
   };
@@ -131,9 +135,9 @@ export const PauseShop: React.FC<PauseShopProps> = ({
         <div className="shop-content">
           <div className="currency-display">
             <div className="currency-info">
-              <span className="currency-icon">💀</span>
-              <span className="currency-amount">{killCount}</span>
-              <span className="currency-label">击杀数</span>
+              <span className="currency-icon">🪙</span>
+              <span className="currency-amount">{coins}</span>
+              <span className="currency-label">金币</span>
             </div>
           </div>
 
@@ -145,7 +149,9 @@ export const PauseShop: React.FC<PauseShopProps> = ({
 
           <div className="shop-grid">
             {shopItems.map((item) => {
-              const canAfford = killCount >= item.cost;
+              const currentPrice = onGetItemPrice(item.id);
+              const purchaseCount = purchaseCounts[item.id] || 0;
+              const canAfford = coins >= currentPrice;
               return (
                 <div
                   key={item.id}
@@ -154,11 +160,16 @@ export const PauseShop: React.FC<PauseShopProps> = ({
                 >
                   <div className="item-icon">{item.icon}</div>
                   <div className="item-info">
-                    <h3 className="item-name">{item.name}</h3>
+                    <h3 className="item-name">
+                      {item.name}
+                      {purchaseCount > 0 && (
+                        <span className="purchase-count"> (已购买{purchaseCount}次)</span>
+                      )}
+                    </h3>
                     <p className="item-description">{item.description}</p>
                     <div className="item-cost">
-                      <span className="cost-icon">💀</span>
-                      <span className="cost-amount">{item.cost}</span>
+                      <span className="cost-icon">🪙</span>
+                      <span className="cost-amount">{currentPrice}</span>
                     </div>
                   </div>
                 </div>
@@ -167,7 +178,7 @@ export const PauseShop: React.FC<PauseShopProps> = ({
           </div>
 
           <div className="shop-instructions">
-            <p>使用击杀数购买道具提升角色能力</p>
+            <p>使用金币购买道具提升角色能力，道具价格会随购买次数递增50%</p>
             <p>按 P 键或点击关闭按钮继续游戏</p>
           </div>
         </div>
