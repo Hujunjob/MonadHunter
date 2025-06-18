@@ -386,8 +386,27 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     
-    this.player.takeDamage(enemy.damage || 10);
-    enemy.destroy();
+    // Boss不会被碰撞销毁，只有普通敌人才会
+    if (enemy instanceof BossEnemy) {
+      // Boss碰撞后短暂无敌，避免连续伤害
+      if (!enemy.isInvulnerable) {
+        this.player.takeDamage(enemy.damage || 10);
+        enemy.isInvulnerable = true;
+        // Boss变透明表示无敌状态
+        enemy.setAlpha(0.5);
+        this.time.delayedCall(1000, () => {
+          if (enemy.active) {
+            enemy.isInvulnerable = false;
+            enemy.setAlpha(1);
+          }
+        });
+      }
+      // Boss在无敌状态时不造成伤害，直接返回
+    } else {
+      // 普通敌人造成伤害并销毁
+      this.player.takeDamage(enemy.damage || 10);
+      enemy.destroy();
+    }
     
     if (this.player.isDead()) {
       this.gameOver();
@@ -784,8 +803,13 @@ export class GameScene extends Phaser.Scene {
         // 显示Boss金币弹出效果
         this.showCoinPopup(this.currentBoss.x, this.currentBoss.y, 100);
         
-        // Boss已经在takeDamage中被destroy，只需清理引用
-        this.currentBoss = null;
+        // 延迟一点时间再销毁Boss，让金币动画正常播放
+        this.time.delayedCall(100, () => {
+          if (this.currentBoss && this.currentBoss.active) {
+            this.currentBoss.destroy();
+          }
+          this.currentBoss = null;
+        });
       }
     }
     
