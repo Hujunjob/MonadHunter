@@ -16,7 +16,7 @@ export class BossEnemy extends Enemy {
     // Boss属性大幅增强
     this.health = 80 + (level * 150); // 进一步提高血量
     this.maxHealth = this.health;
-    this.damage = 30 + (level * 10); // 大幅提高攻击力
+    this.damage = 20 + (level * 10); // 大幅提高攻击力
     this.speed = 60; // 提高移动速度
     
     // 设置更大尺寸（2倍）
@@ -82,7 +82,7 @@ export class BossEnemy extends Enemy {
   private fireCircularBurst() {
     if (!this.active) return;
     
-    const bulletCount = 16; // 增加环形弹幕数量
+    const bulletCount = 12; // 增加环形弹幕数量
     const angleStep = (Math.PI * 2) / bulletCount;
     
     for (let i = 0; i < bulletCount; i++) {
