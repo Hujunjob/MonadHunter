@@ -5,7 +5,7 @@ export const CONTRACT_ADDRESSES = {
   
   // Testnets
   11155111: '', // Sepolia - Update after deployment
-  10143: '0x98E3b04F2AAfF5E0e0fc53c1d26374ffef4B2eD9', // Monad Testnet
+  10143: '0x1aF71cCB324F727A832DF53b8372A296e165B8C0', // Monad Testnet
   
   // Mainnets
   1: '', // Ethereum Mainnet
@@ -60,6 +60,33 @@ export const CONTRACT_ABI = [
         ],
         "internalType": "struct MonadHunterScore.GameResult[]",
         "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalPlayers",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "_count", "type": "uint256"}],
+    "name": "getLeaderboard",
+    "outputs": [
+      {"internalType": "address[]", "name": "topPlayers", "type": "address[]"},
+      {
+        "components": [
+          {"internalType": "uint256", "name": "level", "type": "uint256"},
+          {"internalType": "uint256", "name": "killCount", "type": "uint256"},
+          {"internalType": "uint256", "name": "gameTime", "type": "uint256"},
+          {"internalType": "uint256", "name": "timestamp", "type": "uint256"}
+        ],
+        "internalType": "struct MonadHunterScore.GameResult[]",
+        "name": "topScores",
         "type": "tuple[]"
       }
     ],

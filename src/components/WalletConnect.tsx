@@ -1,7 +1,6 @@
 import React from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
-import { AddMonadNetwork } from './AddMonadNetwork';
 
 interface WalletConnectProps {
   onWalletConnected?: () => void;
@@ -42,10 +41,6 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({ onWalletConnected 
             </div>
           </div>
           
-          {/* Monad Network Helper - only show when wallet is connected */}
-          <div style={{ marginTop: '1rem' }}>
-            <AddMonadNetwork />
-          </div>
         </div>
       )}
     </div>

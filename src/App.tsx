@@ -7,6 +7,7 @@ import { UpgradeModal } from './components/UpgradeModal';
 import { ScoreUpload } from './components/ScoreUpload';
 import { PlayerStats } from './components/PlayerStats';
 import { NetworkIndicator } from './components/NetworkIndicator';
+import { Leaderboard } from './components/Leaderboard';
 import type { UpgradeOption } from './components/UpgradeModal';
 import './App.css';
 
@@ -21,6 +22,7 @@ function App() {
   const [playerLevel, setPlayerLevel] = useState(1);
   const [isScoreUploadOpen, setIsScoreUploadOpen] = useState(false);
   const [gameStats, setGameStats] = useState<{level: number; killCount: number; gameTime: number} | null>(null);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
   const startGame = () => {
     if (!gameRef.current) {
@@ -76,6 +78,14 @@ function App() {
     setGameStats(null);
     // Return to menu after score upload
     resetGame();
+  };
+
+  const showLeaderboard = () => {
+    setIsLeaderboardOpen(true);
+  };
+
+  const hideLeaderboard = () => {
+    setIsLeaderboardOpen(false);
   };
 
   // Update app state based on wallet connection
@@ -139,6 +149,7 @@ function App() {
         <div>
           <GameModeSelection 
             onStartGame={startGame}
+            onShowLeaderboard={showLeaderboard}
           />
         </div>
       )}
@@ -177,6 +188,13 @@ function App() {
           gameStats={gameStats}
           onUploadComplete={handleScoreUploadComplete}
           onClose={handleScoreUploadClose}
+        />
+      )}
+
+      {/* Leaderboard Modal */}
+      {isLeaderboardOpen && (
+        <Leaderboard
+          onClose={hideLeaderboard}
         />
       )}
     </div>

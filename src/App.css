@@ -90,6 +90,131 @@
   opacity: 0.8;
 }
 
+/* Monad Network Card */
+.monad-network-card {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  color: #3b82f6;
+}
+
+.monad-network-card.connected {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.monad-network-card.auto-switching {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.monad-network-card.auto-switching .status-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.network-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.network-info {
+  flex: 1;
+}
+
+.network-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-icon {
+  font-size: 1rem;
+}
+
+.status-text {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.network-description {
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0 0;
+  opacity: 0.8;
+}
+
+.add-monad-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-monad-btn:hover:not(.loading) {
+  background: #2563eb;
+}
+
+.add-monad-btn.loading {
+  background: #9ca3af;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.manual-instructions {
+  margin-top: 0.5rem;
+}
+
+.instructions-summary {
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #3b82f6;
+  transition: color 0.2s;
+}
+
+.instructions-summary:hover {
+  color: #1d4ed8;
+}
+
+.instructions-content {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  background: rgba(59, 130, 246, 0.05);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.instructions-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.instructions-list {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.instructions-list li {
+  margin-bottom: 0.125rem;
+}
+
 .App h1 {
   color: #ffffff;
   margin-bottom: 10px;
@@ -285,6 +410,11 @@
 .game-mode-button.start-game:hover {
   border-color: #22c55e;
   box-shadow: 0 12px 40px rgba(34, 197, 94, 0.3);
+}
+
+.game-mode-button.leaderboard:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 12px 40px rgba(251, 191, 36, 0.3);
 }
 
 .button-icon {
@@ -606,6 +736,208 @@
   height: 8px;
   background-color: #22c55e;
   border-radius: 50%;
+}
+
+/* Leaderboard Styles */
+.leaderboard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.leaderboard-modal {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-header h2 {
+  margin: 0;
+  color: #fbbf24;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.leaderboard-content {
+  padding: 2rem;
+}
+
+.leaderboard-message {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem;
+}
+
+.leaderboard-message .hint {
+  color: #fbbf24;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.leaderboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  color: #cccccc;
+}
+
+.count-selector {
+  background: #374151;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.leaderboard-table {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 80px 120px 80px 80px 80px 100px;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  color: #fbbf24;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.table-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 80px 120px 80px 80px 80px 100px;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9rem;
+  text-align: center;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row.top-1 {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+}
+
+.table-row.top-2 {
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.1), transparent);
+}
+
+.table-row.top-3 {
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), transparent);
+}
+
+.rank-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.rank-number {
+  font-weight: 600;
+}
+
+.trophy {
+  font-size: 1.2rem;
+}
+
+.address {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.kills {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.level {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.time {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.date {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.leaderboard-footer {
+  padding: 1rem 2rem 2rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Design for Leaderboard */
+@media (max-width: 768px) {
+  .leaderboard-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .table-header,
+  .table-row {
+    grid-template-columns: 50px 100px 60px 60px 70px 80px;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .leaderboard-header {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .leaderboard-content {
+    padding: 1rem;
+  }
 }
 
 .game-controls {

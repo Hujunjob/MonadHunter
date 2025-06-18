@@ -43,6 +43,19 @@ export function useMonadHunterContract() {
     }
   });
 
+  // Get leaderboard
+  const getLeaderboard = (count: number = 10) => {
+    return useReadContract({
+      address: contractAddress as `0x${string}`,
+      abi: CONTRACT_ABI,
+      functionName: 'getLeaderboard',
+      args: [BigInt(count)],
+      query: {
+        enabled: !!contractAddress && isConnected
+      }
+    });
+  };
+
   // Contract write functions
   const { writeContract, data: writeData, error: writeError } = useWriteContract();
 
@@ -132,6 +145,7 @@ export function useMonadHunterContract() {
     
     // Utils
     isConnected,
-    refetchScore
+    refetchScore,
+    getLeaderboard
   };
 }

@@ -4,7 +4,7 @@ async function main() {
   console.log("Testing MonadHunter Score Contract...");
 
   // Get the deployed contract address
-  const contractAddress = "0x98E3b04F2AAfF5E0e0fc53c1d26374ffef4B2eD9";
+  const contractAddress = "0x1aF71cCB324F727A832DF53b8372A296e165B8C0";
   
   // Get contract instance
   const MonadHunterScore = await hre.ethers.getContractFactory("MonadHunterScore");
@@ -61,6 +61,20 @@ async function main() {
         gameTime: history[history.length - 1].gameTime.toString(),
         timestamp: history[history.length - 1].timestamp.toString()
       });
+    }
+    
+    // Test 6: Get total players
+    console.log("\n=== Test 6: Get total players ===");
+    const totalPlayers = await contract.getTotalPlayers();
+    console.log("Total players:", totalPlayers.toString());
+
+    // Test 7: Get leaderboard
+    console.log("\n=== Test 7: Get leaderboard ===");
+    const leaderboard = await contract.getLeaderboard(10);
+    console.log("Leaderboard players:", leaderboard[0]);
+    console.log("Leaderboard scores:");
+    for (let i = 0; i < leaderboard[0].length; i++) {
+      console.log(`  ${i + 1}. ${leaderboard[0][i]}: ${leaderboard[1][i].killCount} kills, Level ${leaderboard[1][i].level}`);
     }
     
     console.log("\n✅ All tests passed! Contract is working correctly.");

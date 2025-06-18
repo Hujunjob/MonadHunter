@@ -526,17 +526,15 @@ export class GameScene extends Phaser.Scene {
       // Always show game over screen in game first
       this.showGameOverScreen();
       
-      // Then show score upload modal via global callback after a delay
-      this.time.delayedCall(2000, () => {
-        const showScoreUploadCallback = (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
-        if (showScoreUploadCallback) {
-          showScoreUploadCallback({
-            level: this.gameStats.level,
-            killCount: this.gameStats.killCount,
-            gameTime: this.gameStats.gameTime
-          });
-        }
-      });
+      // Then show score upload modal via global callback immediately
+      const showScoreUploadCallback = (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
+      if (showScoreUploadCallback) {
+        showScoreUploadCallback({
+          level: this.gameStats.level,
+          killCount: this.gameStats.killCount,
+          gameTime: this.gameStats.gameTime
+        });
+      }
     });
   }
 
