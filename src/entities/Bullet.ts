@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Enemy } from './Enemy';
 
 export class Bullet extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number, _target: Enemy) {
+  constructor(scene: Phaser.Scene, x: number, y: number, _target: Enemy | null) {
     super(scene, x, y, 'bullet');
     
     scene.add.existing(this);

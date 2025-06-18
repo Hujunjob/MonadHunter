@@ -10,6 +10,8 @@ export interface PlayerStats {
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   public stats: PlayerStats;
+  private invincible: boolean = false;
+  private invincibilityEndTime: number = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, initialStats?: Partial<PlayerStats>) {
     super(scene, x, y, 'player');
@@ -43,6 +45,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     } else if (cursors.down.isDown) {
       this.setVelocityY(this.stats.speed);
     }
+
+    // Check invincibility status
+    this.updateInvincibility();
   }
 
   updateStats(newStats: Partial<PlayerStats>) {
@@ -50,6 +55,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   takeDamage(damage: number): number {
+    // 如果处于无敌状态，不受任何伤害
+    if (this.invincible) {
+      return 0;
+    }
+    
     const actualDamage = Math.max(1, damage - this.stats.defense);
     this.stats.health = Math.max(0, this.stats.health - actualDamage);
     return actualDamage;
@@ -63,5 +73,36 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   isDead(): boolean {
     return this.stats.health <= 0;
+  }
+
+  // 激活无敌状态
+  activateInvincibility(duration: number = 5000) {
+    this.invincible = true;
+    this.invincibilityEndTime = Date.now() + duration;
+    
+    // 添加视觉效果：闪烁
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0.5,
+      duration: 200,
+      yoyo: true,
+      repeat: Math.floor(duration / 400) - 1,
+      onComplete: () => {
+        this.setAlpha(1); // 确保最后恢复完全不透明
+      }
+    });
+  }
+
+  // 更新无敌状态
+  private updateInvincibility() {
+    if (this.invincible && Date.now() >= this.invincibilityEndTime) {
+      this.invincible = false;
+      this.setAlpha(1); // 确保恢复正常显示
+    }
+  }
+
+  // 检查是否处于无敌状态
+  isInvincible(): boolean {
+    return this.invincible;
   }
 }

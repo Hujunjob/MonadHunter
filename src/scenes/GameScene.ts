@@ -39,6 +39,7 @@ export class GameScene extends Phaser.Scene {
   private isGameOver: boolean = false;
   private isUpgradeModalOpen: boolean = false;
   private pendingUpgradeOptions: any[] = [];
+  private circleBurstLevel: number = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -87,6 +88,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = false;
     this.isUpgradeModalOpen = false;
     this.pendingUpgradeOptions = [];
+    this.circleBurstLevel = 0;
     
     // Adjust max enemies based on level for performance
     this.maxEnemies = Math.min(20 + this.gameStats.level * 2, 40);
@@ -177,7 +179,10 @@ export class GameScene extends Phaser.Scene {
     }
     
     // Update UI
-    this.gameUI.update(this.gameStats);
+    this.gameUI.update({
+      ...this.gameStats,
+      circleBurstLevel: this.circleBurstLevel
+    });
   }
   
   private quickCleanup() {
@@ -275,6 +280,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private shoot() {
+    // 检查是否触发环形弹幕
+    if (this.circleBurstLevel > 0) {
+      const circleBurstChance = this.circleBurstLevel * 5; // 每级5%概率
+      if (Math.random() * 100 < circleBurstChance) {
+        this.fireCircleBurst();
+        return; // 发射环形弹幕时不发射普通子弹
+      }
+    }
+    
     const nearestEnemy = this.findNearestEnemy();
     if (nearestEnemy) {
       // Fire multiple bullets based on bulletCount
@@ -436,6 +450,16 @@ export class GameScene extends Phaser.Scene {
           this.player.updateStats({ defense: this.player.stats.defense + 2 });
           this.gameStats.playerStats.defense = this.player.stats.defense;
         }
+      },
+      {
+        id: 'circle-burst',
+        title: '环形弹幕',
+        description: `升级环形弹幕等级 (当前${this.circleBurstLevel}级)`,
+        icon: '💥',
+        effect: () => {
+          // 升级环形弹幕等级
+          this.circleBurstLevel++;
+        }
       }
     ];
 
@@ -456,6 +480,9 @@ export class GameScene extends Phaser.Scene {
       selectedUpgrade.effect();
       this.isUpgradeModalOpen = false;
       this.pendingUpgradeOptions = [];
+      
+      // 激活玩家5秒无敌状态
+      this.player.activateInvincibility(5000);
       
       // Resume game
       this.physics.resume(); // 恢复物理引擎
@@ -496,6 +523,27 @@ export class GameScene extends Phaser.Scene {
       this.gameUI.setWalletStatus({
         connected: false
       });
+    }
+  }
+
+
+
+  // 发射环形弹幕
+  private fireCircleBurst() {
+    const bulletCount = 24; // 一圈24发子弹
+    const angleStep = (Math.PI * 2) / bulletCount; // 每发子弹间隔的角度
+    
+    for (let i = 0; i < bulletCount; i++) {
+      const angle = i * angleStep;
+      const bullet = new Bullet(this, this.player.x, this.player.y, null); // 没有目标，直接按角度发射
+      this.bullets.add(bullet);
+      
+      // 设置子弹速度
+      const speed = 450; // 比普通子弹稍快
+      bullet.setVelocity(
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed
+      );
     }
   }
 }

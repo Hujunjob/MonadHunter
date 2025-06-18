@@ -10,6 +10,7 @@ interface GameStats {
   killCount: number;
   gameTime: number;
   playerStats: PlayerStats;
+  circleBurstLevel?: number;
 }
 
 interface WalletInfo {
@@ -122,12 +123,18 @@ export class GameUI {
     this.expBar.fillRect(10, 70, expWidth, 20);
 
     // Update player stats display
-    const statsText = [
+    const statsLines = [
       `🔫 子弹数量: ${stats.playerStats.bulletCount}`,
       `⚡ 移动速度: ${stats.playerStats.speed}`,
       `🛡️ 防御力: ${stats.playerStats.defense}`
-    ].join('\n');
-    this.playerStatsText.setText(statsText);
+    ];
+    
+    // Add circle burst probability (always show, even when 0)
+    const circleBurstLevel = stats.circleBurstLevel || 0;
+    const circleBurstChance = circleBurstLevel * 5;
+    statsLines.push(`💥 环形弹幕: ${circleBurstChance}%`);
+    
+    this.playerStatsText.setText(statsLines.join('\n'));
   }
 
   private formatTime(seconds: number): string {
