@@ -17,6 +17,17 @@
   margin-bottom: 10px;
   font-size: 3rem;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.game-logo {
+  height: 3rem;
+  width: 3rem;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
 }
 
 .App p {

@@ -4,14 +4,11 @@ import { Enemy } from './Enemy';
 
 export class ShooterEnemy extends Enemy {
   private lastShotTime: number = 0;
-  private shootInterval: number = 1500; // 每1.5秒射击一次
-  private shootRange: number = 350; // 增加射击范围
+  private shootInterval: number = 800; // 每1.5秒射击一次
+  private shootRange: number = 550; // 增加射击范围
 
-  constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1) {
-    super(scene, x, y, player, level);
-    
-    // 射击敌人的特殊属性
-    this.setTint(0xff6600); // 橙色标识射击敌人
+  constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1, texture: string = 'monadbullet') {
+    super(scene, x, y, player, level, texture);
     this.shootInterval = Math.max(800, 1500 - (level - 1) * 100); // 等级越高射击越频繁
   }
 

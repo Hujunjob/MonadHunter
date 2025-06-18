@@ -45,16 +45,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    // Create simple colored rectangles as placeholders
-    this.add.graphics()
-      .fillStyle(0x00ff00)
-      .fillRect(0, 0, 32, 32)
-      .generateTexture('player', 32, 32);
-      
-    this.add.graphics()
-      .fillStyle(0xff0000)
-      .fillRect(0, 0, 24, 24)
-      .generateTexture('enemy', 24, 24);
+    // Load horse icon for player
+    this.load.image('player', '/src/assets/horseicon.png');
+    
+    // Load enemy sprites
+    this.load.image('monad1', '/src/assets/monad1.png');
+    this.load.image('monad2', '/src/assets/monad2.png');
+    this.load.image('monadbullet', '/src/assets/monadbullet.png');
       
     this.add.graphics()
       .fillStyle(0xffff00)
@@ -236,9 +233,13 @@ export class GameScene extends Phaser.Scene {
     let enemy;
     
     if (Math.random() < shooterChance) {
-      enemy = new ShooterEnemy(this, x, y, this.player, this.gameStats.level);
+      // 射击敌人使用 monadbullet 头像
+      enemy = new ShooterEnemy(this, x, y, this.player, this.gameStats.level, 'monadbullet');
     } else {
-      enemy = new Enemy(this, x, y, this.player, this.gameStats.level);
+      // 普通敌人随机选择 monad1 或 monad2 头像
+      const normalEnemyTextures = ['monad1', 'monad2'];
+      const randomTexture = normalEnemyTextures[Math.floor(Math.random() * normalEnemyTextures.length)];
+      enemy = new Enemy(this, x, y, this.player, this.gameStats.level, randomTexture);
     }
     
     this.enemies.add(enemy);

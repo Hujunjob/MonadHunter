@@ -95,7 +95,10 @@ function App() {
   return (
     <div className="App">
       <header className="app-header">
-        <h1>🧛 MonadHunter</h1>
+        <h1>
+          <img src="/src/assets/horseicon.png" alt="MonadHunter" className="game-logo" />
+          MonadHunter
+        </h1>
         <p>使用方向键移动，空格键射击最近的敌人</p>
       </header>
 

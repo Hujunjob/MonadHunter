@@ -8,8 +8,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   protected player: Player;
   public damage: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1) {
-    super(scene, x, y, 'enemy');
+  constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1, texture: string = 'monad1') {
+    super(scene, x, y, texture);
     
     this.player = player;
     
