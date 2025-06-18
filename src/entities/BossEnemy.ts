@@ -14,7 +14,7 @@ export class BossEnemy extends Enemy {
     super(scene, x, y, player, level, texture);
     
     // Boss属性大幅增强
-    this.health = 100 + (level * 150); // 进一步提高血量
+    this.health = 80 + (level * 150); // 进一步提高血量
     this.maxHealth = this.health;
     this.damage = 30 + (level * 10); // 大幅提高攻击力
     this.speed = 60; // 提高移动速度
@@ -22,8 +22,9 @@ export class BossEnemy extends Enemy {
     // 设置更大尺寸（2倍）
     this.setScale(2);
     
-    // 创建血条
-    this.healthBar = new HealthBar(scene, x, y - 80, 100, 8);
+    // 重新配置继承的血条为Boss尺寸
+    this.healthBar.destroy(); // 先销毁基类创建的小血条
+    this.healthBar = new HealthBar(scene, x, y - 80, 100, 8); // 创建Boss专用大血条
     this.healthBar.setHealth(this.health, this.maxHealth);
     
     // Boss特殊颜色效果
