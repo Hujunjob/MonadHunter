@@ -3,7 +3,7 @@ import { useChainId, useSwitchChain } from 'wagmi';
 
 export const AddMonadNetwork: React.FC = () => {
   const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
+  // const { switchChain } = useSwitchChain();
   const [isAdding, setIsAdding] = useState(false);
   const [hasAttemptedAutoSwitch, setHasAttemptedAutoSwitch] = useState(false);
   
