@@ -13,7 +13,7 @@ export class BossEnemy extends Enemy {
     super(scene, x, y, player, level, texture);
     
     // Boss属性大幅增强
-    this.health = 2000 + (level * 1000); // 进一步提高血量
+    this.health = 500 + (level * 1000); // 进一步提高血量
     this.maxHealth = this.health;
     this.damage = 50 + (level * 10); // 大幅提高攻击力
     this.speed = 60; // 提高移动速度
@@ -99,6 +99,11 @@ export class BossEnemy extends Enemy {
     this.scene.time.delayedCall(100, () => {
       this.setTint(0xff6b6b);
     });
+    
+    // 如果Boss死亡，调用destroy清理血条
+    if (this.health <= 0) {
+      this.destroy();
+    }
     
     return this.health <= 0;
   }

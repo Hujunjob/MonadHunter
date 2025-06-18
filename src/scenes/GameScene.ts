@@ -446,8 +446,8 @@ export class GameScene extends Phaser.Scene {
     // 更新敌人生成速度
     this.updateEnemySpawnRate();
     
-    // 检查是否需要生成Boss（每5级）
-    if (this.gameStats.level % 5 === 0) {
+    // 检查是否需要生成Boss（每4级）
+    if (this.gameStats.level % 4 === 0) {
       // 重置Boss状态，允许生成新Boss
       this.bossDefeated = false;
       if (!this.currentBoss || this.currentBoss.isDead()) {
@@ -777,17 +777,14 @@ export class GameScene extends Phaser.Scene {
       if (!this.bossDefeated) {
         this.bossDefeated = true;
         // Boss被击败，给予大量奖励
-        this.gameStats.coins += 100; // Boss奖励100金币
+        this.gameStats.coins += 10; // Boss奖励100金币
         this.gameStats.experience += 200; // 大量额外经验
         console.log(`Boss defeated! +100 coins, +200 exp`);
         
         // 显示Boss金币弹出效果
         this.showCoinPopup(this.currentBoss.x, this.currentBoss.y, 100);
         
-        // 确保Boss和血条被完全清理
-        if (this.currentBoss.active) {
-          this.currentBoss.destroy();
-        }
+        // Boss已经在takeDamage中被destroy，只需清理引用
         this.currentBoss = null;
       }
     }
