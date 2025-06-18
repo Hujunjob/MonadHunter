@@ -47,12 +47,12 @@ export class GameScene extends Phaser.Scene {
 
   preload() {
     // Load horse icon for player
-    this.load.image('player', '/src/assets/horseicon.png');
+    this.load.image('player', '/horseicon.png');
     
     // Load enemy sprites
-    this.load.image('monad1', '/src/assets/monad1.png');
-    this.load.image('monad2', '/src/assets/monad2.png');
-    this.load.image('monadbullet', '/src/assets/monadbullet.png');
+    this.load.image('monad1', '/monad1.png');
+    this.load.image('monad2', '/monad2.png');
+    this.load.image('monadbullet', '/monadbullet.png');
       
     this.add.graphics()
       .fillStyle(0xffff00)
