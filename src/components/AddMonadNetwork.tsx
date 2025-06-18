@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useChainId, useSwitchChain } from 'wagmi';
+import { useChainId } from 'wagmi';
 
 export const AddMonadNetwork: React.FC = () => {
   const chainId = useChainId();
