@@ -35,14 +35,34 @@ export const ScoreUpload: React.FC<ScoreUploadProps> = ({
       setUploadStatus('uploading');
       setErrorMessage('');
       
+      console.log('Starting score upload:', gameStats);
+      
       await submitScore(gameStats.level, gameStats.killCount, gameStats.gameTime);
       
+      console.log('Score submission initiated');
       // Wait for confirmation
       // The useMonadHunterContract hook will handle the confirmation state
     } catch (error) {
       console.error('Upload failed:', error);
       setUploadStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : 'Upload failed');
+      
+      // Extract meaningful error message
+      let errorMsg = 'Upload failed';
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Handle wagmi/viem errors
+        if ('shortMessage' in error) {
+          errorMsg = (error as any).shortMessage;
+        } else if ('message' in error) {
+          errorMsg = (error as any).message;
+        } else if ('details' in error) {
+          errorMsg = (error as any).details;
+        }
+      }
+      
+      setErrorMessage(errorMsg);
+      console.error('Detailed error:', error);
     }
   };
 

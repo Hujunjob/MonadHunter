@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi';
-import { CONTRACT_ABI, getContractAddress } from '../config/contracts';
+import { CONTRACT_ABI, getContractAddress, CONTRACT_ADDRESSES } from '../config/contracts';
 
 interface GameScore {
   level: number;
@@ -60,14 +60,29 @@ export function useMonadHunterContract() {
     if (!isConnected || !address) {
       throw new Error('Wallet not connected');
     }
-    console.log("chainid",chainId);
+    
+    console.log('Submitting score:', { level, killCount, gameTime, chainId, contractAddress });
     
     if (!contractAddress) {
-      throw new Error('Contract not deployed on this network');
+      throw new Error(`Contract not deployed on chain ${chainId}. Available chains: ${Object.keys(CONTRACT_ADDRESSES).join(', ')}`);
+    }
+
+    // Validate input data
+    if (level <= 0) {
+      throw new Error('Level must be greater than 0');
+    }
+    if (gameTime <= 0) {
+      throw new Error('Game time must be greater than 0');
     }
 
     try {
       setIsSubmitting(true);
+      
+      console.log('Calling writeContract with:', {
+        address: contractAddress,
+        functionName: 'submitScore',
+        args: [BigInt(level), BigInt(killCount), BigInt(gameTime)]
+      });
       
       writeContract({
         address: contractAddress as `0x${string}`,

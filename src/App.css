@@ -170,17 +170,17 @@
 .game-mode-selection {
   max-width: 500px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 0.0rem;
 }
 
 .welcome-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .welcome-section h3 {
   font-size: 1.6rem;
   color: #22c55e;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 .welcome-section p {

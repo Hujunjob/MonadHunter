@@ -32,8 +32,8 @@ contract MonadHunterScore {
         uint256 _gameTime
     ) external {
         require(_level > 0, "Level must be greater than 0");
-        require(_killCount > 0, "Kill count must be greater than 0");
         require(_gameTime > 0, "Game time must be greater than 0");
+        // Note: killCount can be 0 for very short games
         
         GameResult memory newResult = GameResult({
             level: _level,
@@ -46,7 +46,9 @@ contract MonadHunterScore {
         GameResult memory currentBest = playerScores[msg.sender];
         bool isNewHigh = false;
         
-        if (_level > currentBest.level || 
+        // If no previous score exists (timestamp == 0) or this is a better score
+        if (currentBest.timestamp == 0 || 
+            _level > currentBest.level || 
             (_level == currentBest.level && _killCount > currentBest.killCount)) {
             playerScores[msg.sender] = newResult;
             isNewHigh = true;

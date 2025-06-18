@@ -70,7 +70,7 @@ export const AddMonadNetwork: React.FC = () => {
           <span className="text-green-500 mr-2">✅</span>
           <span className="font-semibold text-sm">Connected to Monad Testnet</span>
         </div>
-        <p className="text-xs mt-1">Ready to record your scores on-chain!</p>
+        {/* <p className="text-xs mt-1">Ready to record your scores on-chain!</p> */}
       </div>
     );
   }

@@ -5,7 +5,7 @@ export const CONTRACT_ADDRESSES = {
   
   // Testnets
   11155111: '', // Sepolia - Update after deployment
-  10143: '0xc038B79eDB5e68C3d109627507614745EB555Ace', // Monad Testnet
+  10143: '0x98E3b04F2AAfF5E0e0fc53c1d26374ffef4B2eD9', // Monad Testnet
   
   // Mainnets
   1: '', // Ethereum Mainnet
