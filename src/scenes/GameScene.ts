@@ -494,20 +494,27 @@ export class GameScene extends Phaser.Scene {
     // Set game over flag to stop timer and updates
     this.isGameOver = true;
     
-    // Stop enemy spawning and physics updates instead of pausing the whole scene
-    this.physics.pause();
+    // Set player health to zero for display
+    this.player.updateStats({ health: 0 });
+    this.gameStats.health = 0;
     
-    // Add game over text
-    this.add.text(500, 350, 'GAME OVER', {
-      fontSize: '64px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
-    
-    // Add restart instruction
-    this.add.text(500, 420, 'Click Back to Menu to play again', {
-      fontSize: '24px',
-      color: '#cccccc'
-    }).setOrigin(0.5);
+    // Wait a brief moment for health bar to update to zero, then pause game
+    this.time.delayedCall(100, () => {
+      // Stop enemy spawning and physics updates instead of pausing the whole scene
+      this.physics.pause();
+      
+      // Add game over text
+      this.add.text(500, 350, 'GAME OVER', {
+        fontSize: '64px',
+        color: '#ffffff'
+      }).setOrigin(0.5);
+      
+      // Add restart instruction
+      this.add.text(500, 420, 'Click Back to Menu to play again', {
+        fontSize: '24px',
+        color: '#cccccc'
+      }).setOrigin(0.5);
+    });
   }
 
   private updateWalletStatus() {

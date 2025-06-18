@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from './Player';
+import { HealthBar } from '../components/HealthBar';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private speed: number;
@@ -7,6 +8,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private maxHealth: number;
   protected player: Player;
   public damage: number;
+  private healthBar: HealthBar;
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1, texture: string = 'monad1') {
     super(scene, x, y, texture);
@@ -21,6 +23,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    
+    // Create health bar
+    this.healthBar = new HealthBar(scene, x, y - 30, 30, 4);
+    this.healthBar.setHealth(this.health, this.maxHealth);
   }
 
   update() {
@@ -31,6 +37,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         Math.cos(angle) * this.speed,
         Math.sin(angle) * this.speed
       );
+      
+      // Update health bar position and health
+      this.healthBar.updatePosition(this.x, this.y - 30);
+      this.healthBar.setHealth(this.health, this.maxHealth);
     }
   }
 
@@ -50,5 +60,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   isDead(): boolean {
     return this.health <= 0;
+  }
+
+  // 清理资源
+  destroy(fromScene?: boolean): void {
+    if (this.healthBar) {
+      this.healthBar.destroy();
+    }
+    super.destroy(fromScene);
   }
 }

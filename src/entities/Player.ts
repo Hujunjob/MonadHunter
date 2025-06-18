@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { HealthBar } from '../components/HealthBar';
 
 export interface PlayerStats {
   speed: number;
@@ -12,6 +13,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public stats: PlayerStats;
   private invincible: boolean = false;
   private invincibilityEndTime: number = 0;
+  private healthBar: HealthBar;
 
   constructor(scene: Phaser.Scene, x: number, y: number, initialStats?: Partial<PlayerStats>) {
     super(scene, x, y, 'player');
@@ -29,6 +31,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
     
     this.setCollideWorldBounds(true);
+    
+    // Create health bar
+    this.healthBar = new HealthBar(scene, x, y - 45, 50, 6);
+    this.healthBar.setHealth(this.stats.health, this.stats.maxHealth);
   }
 
   update(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
@@ -48,6 +54,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Check invincibility status
     this.updateInvincibility();
+    
+    // Update health bar position and health
+    this.healthBar.updatePosition(this.x, this.y - 45);
+    this.healthBar.setHealth(this.stats.health, this.stats.maxHealth);
   }
 
   updateStats(newStats: Partial<PlayerStats>) {
@@ -62,6 +72,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     
     const actualDamage = Math.max(1, damage - this.stats.defense);
     this.stats.health = Math.max(0, this.stats.health - actualDamage);
+    
+    // Flash red when hit
+    this.setTint(0xff0000);
+    this.scene.time.delayedCall(100, () => {
+      this.clearTint();
+    });
+    
     return actualDamage;
   }
 
@@ -104,5 +121,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   // 检查是否处于无敌状态
   isInvincible(): boolean {
     return this.invincible;
+  }
+
+  // 清理资源
+  destroy(fromScene?: boolean): void {
+    if (this.healthBar) {
+      this.healthBar.destroy();
+    }
+    super.destroy(fromScene);
   }
 }
