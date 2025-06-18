@@ -140,12 +140,12 @@ function App() {
       </header>
 
       {/* Wallet Connection Phase */}
-      {appState === 'wallet' && (
+      {!isConnected && (
         <WalletConnect />
       )}
 
       {/* Game Mode Selection Phase */}
-      {appState === 'mode-selection' && isConnected && (
+      {isConnected && appState === 'mode-selection' && (
         <div>
           <GameModeSelection 
             onStartGame={startGame}

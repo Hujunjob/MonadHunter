@@ -1,11 +1,33 @@
-import React from 'react';
-import { useChainId, useChains } from 'wagmi';
+import React, { useState, useEffect, useRef } from 'react';
+import { useChainId, useChains, useDisconnect } from 'wagmi';
 
 export const NetworkIndicator: React.FC = () => {
   const chainId = useChainId();
   const chains = useChains();
+  const { disconnect } = useDisconnect();
+  const [showDisconnect, setShowDisconnect] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const currentChain = chains.find(chain => chain.id === chainId);
+
+  const handleDisconnect = () => {
+    disconnect();
+    setShowDisconnect(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDisconnect(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   const getNetworkColor = (chainId: number) => {
     switch (chainId) {
@@ -45,12 +67,27 @@ export const NetworkIndicator: React.FC = () => {
   }
   
   return (
-    <div className="network-indicator">
-      <div className={`network-badge ${getNetworkColor(chainId).replace('bg-', '')}`}>
+    <div className="network-indicator-container" ref={dropdownRef}>
+      <div 
+        className={`network-badge ${getNetworkColor(chainId).replace('bg-', '')} clickable`}
+        onClick={() => setShowDisconnect(!showDisconnect)}
+      >
         <span>{getNetworkEmoji(chainId)}</span>
         <span className="network-name">{currentChain.name}</span>
         {currentChain.testnet && <span className="testnet-label">(Testnet)</span>}
+        <span className="dropdown-arrow">▼</span>
       </div>
+      
+      {showDisconnect && (
+        <div className="disconnect-dropdown">
+          <button 
+            className="disconnect-btn"
+            onClick={handleDisconnect}
+          >
+            🔌 Disconnect Wallet
+          </button>
+        </div>
+      )}
     </div>
   );
 };
