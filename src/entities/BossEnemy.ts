@@ -8,7 +8,6 @@ export class BossEnemy extends Enemy {
   private shootCooldown: number = 1000; // 1秒射击间隔（更频繁）
   private circularBurstTimer: number = 0;
   private circularBurstCooldown: number = 3000; // 3秒环形弹幕间隔（更频繁）
-  private healthBar: HealthBar;
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number, texture: string) {
     super(scene, x, y, player, level, texture);

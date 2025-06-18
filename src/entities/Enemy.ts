@@ -3,12 +3,12 @@ import { Player } from './Player';
 import { HealthBar } from '../components/HealthBar';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
-  private speed: number;
-  private health: number;
-  private maxHealth: number;
+  protected speed: number;
+  protected health: number;
+  protected maxHealth: number;
   protected player: Player;
   public damage: number;
-  private healthBar: HealthBar;
+  protected healthBar: HealthBar;
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player, level: number = 1, texture: string = 'monad1') {
     super(scene, x, y, texture);

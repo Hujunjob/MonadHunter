@@ -8,6 +8,7 @@ interface GameStats {
   health: number;
   maxHealth: number;
   killCount: number;
+  coins: number;
   gameTime: number;
   playerStats: PlayerStats;
   circleBurstLevel?: number;
@@ -28,6 +29,7 @@ export class GameUI {
   private killCountText!: Phaser.GameObjects.Text;
   private gameTimeText!: Phaser.GameObjects.Text;
   private walletStatus!: Phaser.GameObjects.Text;
+  private coinsText!: Phaser.GameObjects.Text;
   private playerStatsText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, stats: GameStats) {
@@ -90,6 +92,13 @@ export class GameUI {
       color: '#676FFF'
     });
 
+    // Coins display (below wallet status)
+    this.coinsText = this.scene.add.text(700, 75, `🪙 ${stats.coins}`, {
+      fontSize: '16px',
+      color: '#fbbf24',
+      fontStyle: 'bold'
+    });
+
     // Player stats display
     this.playerStatsText = this.scene.add.text(10, 150, '', {
       fontSize: '16px',
@@ -115,6 +124,7 @@ export class GameUI {
     this.levelText.setText(`Level: ${stats.level}`);
     this.killCountText.setText(`Kills: ${stats.killCount}`);
     this.gameTimeText.setText(`Time: ${this.formatTime(stats.gameTime)}`);
+    this.coinsText.setText(`🪙 ${stats.coins}`);
 
     // Update experience bar
     this.expBar.clear();

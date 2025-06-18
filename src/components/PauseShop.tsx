@@ -103,10 +103,10 @@ export const PauseShop: React.FC<PauseShopProps> = ({
     onClose();
   };
 
-  // Handle P key press to close shop
+  // Handle P key and ESC key press to close shop
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'p' || event.key === 'P') {
+      if (event.key === 'p' || event.key === 'P' || event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
         handleClose();
@@ -179,7 +179,7 @@ export const PauseShop: React.FC<PauseShopProps> = ({
 
           <div className="shop-instructions">
             <p>使用金币购买道具提升角色能力，道具价格会随购买次数翻倍</p>
-            <p>按 P 键或点击关闭按钮继续游戏</p>
+            <p>按 P 键、ESC 键或点击关闭按钮继续游戏</p>
           </div>
         </div>
       </div>
