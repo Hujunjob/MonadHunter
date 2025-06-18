@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAccount } from 'wagmi';
+import { AddMonadNetwork } from './AddMonadNetwork';
 
 interface GameModeSelectionProps {
   onStartGame: () => void;
@@ -14,6 +15,9 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({ onStartGam
         <h3>Welcome, {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Player'}!</h3>
         <p>Ready to start your vampire hunting adventure?</p>
       </div>
+      
+      {/* Monad Network Helper */}
+      <AddMonadNetwork />
       
       <div className="mode-buttons">
         <button 

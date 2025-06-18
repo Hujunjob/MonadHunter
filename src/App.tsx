@@ -4,6 +4,9 @@ import { Game } from './Game';
 import { WalletConnect } from './components/WalletConnect';
 import { GameModeSelection } from './components/GameModeSelection';
 import { UpgradeModal } from './components/UpgradeModal';
+import { ScoreUpload } from './components/ScoreUpload';
+import { PlayerStats } from './components/PlayerStats';
+import { NetworkIndicator } from './components/NetworkIndicator';
 import type { UpgradeOption } from './components/UpgradeModal';
 import './App.css';
 
@@ -16,6 +19,8 @@ function App() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeOptions, setUpgradeOptions] = useState<UpgradeOption[]>([]);
   const [playerLevel, setPlayerLevel] = useState(1);
+  const [isScoreUploadOpen, setIsScoreUploadOpen] = useState(false);
+  const [gameStats, setGameStats] = useState<{level: number; killCount: number; gameTime: number} | null>(null);
 
   const startGame = () => {
     if (!gameRef.current) {
@@ -56,6 +61,23 @@ function App() {
     setIsUpgradeModalOpen(false);
   };
 
+  const showScoreUpload = (stats: {level: number; killCount: number; gameTime: number}) => {
+    setGameStats(stats);
+    setIsScoreUploadOpen(true);
+  };
+
+  const handleScoreUploadComplete = () => {
+    // Could trigger a celebration animation or other effects
+    console.log('Score uploaded successfully!');
+  };
+
+  const handleScoreUploadClose = () => {
+    setIsScoreUploadOpen(false);
+    setGameStats(null);
+    // Return to menu after score upload
+    resetGame();
+  };
+
   // Update app state based on wallet connection
   React.useEffect(() => {
     if (isConnected && appState === 'wallet') {
@@ -86,19 +108,24 @@ function App() {
   React.useEffect(() => {
     (window as any).__GAME_RESET_CALLBACK__ = resetGame;
     (window as any).__SHOW_UPGRADE_CALLBACK__ = showUpgradeModal;
+    (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__ = showScoreUpload;
     return () => {
       delete (window as any).__GAME_RESET_CALLBACK__;
       delete (window as any).__SHOW_UPGRADE_CALLBACK__;
+      delete (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
     };
   }, []);
 
   return (
     <div className="App">
       <header className="app-header">
-        <h1>
-          <img src="/horseicon.png" alt="MonadHunter" className="game-logo" />
-          MonadHunter
-        </h1>
+        <div className="header-top">
+          <h1>
+            <img src="/horseicon.png" alt="MonadHunter" className="game-logo" />
+            MonadHunter
+          </h1>
+          {isConnected && <NetworkIndicator />}
+        </div>
         <p>使用方向键移动，空格键射击最近的敌人</p>
       </header>
 
@@ -109,9 +136,15 @@ function App() {
 
       {/* Game Mode Selection Phase */}
       {appState === 'mode-selection' && isConnected && (
-        <GameModeSelection 
-          onStartGame={startGame}
-        />
+        <div>
+          <GameModeSelection 
+            onStartGame={startGame}
+          />
+          {/* Show player's blockchain stats */}
+          <div className="mt-6 max-w-md mx-auto">
+            <PlayerStats />
+          </div>
+        </div>
       )}
 
       {/* Game Running Phase */}
@@ -136,6 +169,15 @@ function App() {
         onSelectUpgrade={selectUpgrade}
         playerLevel={playerLevel}
       />
+
+      {/* Score Upload Modal */}
+      {isScoreUploadOpen && gameStats && (
+        <ScoreUpload
+          gameStats={gameStats}
+          onUploadComplete={handleScoreUploadComplete}
+          onClose={handleScoreUploadClose}
+        />
+      )}
     </div>
   );
 }

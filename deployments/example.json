@@ -1,0 +1,6 @@
+{
+  "address": "0x...",
+  "network": "network_name",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "description": "Example deployment file structure"
+}

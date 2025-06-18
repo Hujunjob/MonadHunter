@@ -523,18 +523,33 @@ export class GameScene extends Phaser.Scene {
       // Stop enemy spawning and physics updates instead of pausing the whole scene
       this.physics.pause();
       
-      // Add game over text
-      this.add.text(500, 350, 'GAME OVER', {
-        fontSize: '64px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
-      
-      // Add restart instruction
-      this.add.text(500, 420, 'Click Back to Menu to play again', {
-        fontSize: '24px',
-        color: '#cccccc'
-      }).setOrigin(0.5);
+      // Show score upload modal via global callback
+      const showScoreUploadCallback = (window as any).__SHOW_SCORE_UPLOAD_CALLBACK__;
+      if (showScoreUploadCallback) {
+        showScoreUploadCallback({
+          level: this.gameStats.level,
+          killCount: this.gameStats.killCount,
+          gameTime: this.gameStats.gameTime
+        });
+      } else {
+        // Fallback to old game over display
+        this.showGameOverScreen();
+      }
     });
+  }
+
+  private showGameOverScreen() {
+    // Add game over text
+    this.add.text(500, 350, 'GAME OVER', {
+      fontSize: '64px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+    
+    // Add restart instruction
+    this.add.text(500, 420, 'Click Back to Menu to play again', {
+      fontSize: '24px',
+      color: '#cccccc'
+    }).setOrigin(0.5);
   }
 
   private updateWalletStatus() {

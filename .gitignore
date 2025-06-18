@@ -50,4 +50,28 @@ coverage/
 tmp/
 temp/
 
+# Hardhat files
+cache/
+artifacts/
+typechain-types/
+
+# Deployment outputs (keep examples but ignore actual deployments)
+deployments/*.json
+!deployments/.gitkeep
+!deployments/example.json
+
+# Hardhat network files
+.openzeppelin/
+
+# Ethereum development
+.secret
+coverage.json
+gasReporterOutput.json
+
+# Local blockchain data
+.hardhat/
+
+# Contract ABIs (auto-generated)
+src/abis/
+
 .claude
