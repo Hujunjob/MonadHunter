@@ -498,6 +498,12 @@ export class GameScene extends Phaser.Scene {
     this.player.updateStats({ health: 0 });
     this.gameStats.health = 0;
     
+    // Force update UI to show zero health immediately
+    this.gameUI.update({
+      ...this.gameStats,
+      circleBurstLevel: this.circleBurstLevel
+    });
+    
     // Wait a brief moment for health bar to update to zero, then pause game
     this.time.delayedCall(100, () => {
       // Stop enemy spawning and physics updates instead of pausing the whole scene

@@ -62,6 +62,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   updateStats(newStats: Partial<PlayerStats>) {
     this.stats = { ...this.stats, ...newStats };
+    
+    // Update health bar display immediately when stats change
+    if (this.healthBar) {
+      this.healthBar.setHealth(this.stats.health, this.stats.maxHealth);
+      this.healthBar.updatePosition(this.x, this.y - 45);
+    }
   }
 
   takeDamage(damage: number): number {
