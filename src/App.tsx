@@ -186,7 +186,7 @@ function App() {
         <div className="header-top">
           <h1>
             <img src="/horseicon.png" alt="MonadHunter" className="game-logo" />
-            MonadHunter
+            保护小马
           </h1>
           {isConnected && appState !== 'playing' && <NetworkIndicator />}
         </div>
